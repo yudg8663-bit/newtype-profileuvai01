@@ -50,16 +50,16 @@ newtype-profile is an AI Agent collaboration framework designed for **content cr
 
 ### Installation Methods
 
-#### Method 1: GitHub Repository URL (Recommended)
+#### Method 1: npm Package (Recommended)
 
-The simplest way - directly reference the GitHub repository in your OpenCode config:
+The simplest way - install via npm package name:
 
 Edit `~/.config/opencode/opencode.json`:
 
 ```json
 {
   "plugin": [
-    "github:newtype-01/newtype-profile"
+    "newtype-profile"
   ]
 }
 ```

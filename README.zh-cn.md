@@ -50,16 +50,16 @@ newtype-profile 是一套专为**内容创作**设计的 AI Agent 协作框架�
 
 ### 部署方式
 
-#### 方式一：GitHub 仓库地址（推荐）
+#### 方式一：npm 包（推荐）
 
-最简单的方式 - 直接在 OpenCode 配置中引用 GitHub 仓库：
+最简单的方式 - 通过 npm 包名安装：
 
 编辑 `~/.config/opencode/opencode.json`：
 
 ```json
 {
   "plugin": [
-    "github:newtype-01/newtype-profile"
+    "newtype-profile"
   ]
 }
 ```
