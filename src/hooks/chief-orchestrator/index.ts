@@ -11,6 +11,8 @@ import { getMainSessionID, subagentSessions } from "../../features/claude-code-s
 import { findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { log } from "../../shared/logger"
 import type { BackgroundManager } from "../../features/background-agent"
+import { summarizeOutput, formatSummarizedOutput } from "./output-summarizer"
+import { getTrackerForSession, clearTrackerForSession } from "./task-progress-tracker"
 
 export const HOOK_NAME = "chief-orchestrator"
 
@@ -532,6 +534,7 @@ export function createChiefOrchestratorHook(
         const sessionInfo = props?.info as { id?: string } | undefined
         if (sessionInfo?.id) {
           sessions.delete(sessionInfo.id)
+          clearTrackerForSession(sessionInfo.id)
           log(`[${HOOK_NAME}] Session deleted: cleaned up`, { sessionID: sessionInfo.id })
         }
         return
@@ -565,13 +568,33 @@ export function createChiefOrchestratorHook(
         return
       }
 
-      // Check chief_task - inject single-task directive
+      // Check chief_task - inject single-task directive and track task
       if (input.tool === "chief_task") {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes("[SYSTEM DIRECTIVE - SINGLE TASK ONLY]")) {
           output.args.prompt = prompt + `\n<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>`
           log(`[${HOOK_NAME}] Injected single-task directive to chief_task`, {
             sessionID: input.sessionID,
+          })
+        }
+
+        if (input.sessionID && input.callID) {
+          const tracker = getTrackerForSession(input.sessionID)
+          const description = output.args.description as string | undefined ?? "Task"
+          const category = output.args.category as string | undefined
+          const agent = output.args.subagent_type as string | undefined ?? "deputy"
+
+          tracker.addTask({
+            id: input.callID,
+            agent,
+            category,
+            description,
+          })
+          log(`[${HOOK_NAME}] Task started`, {
+            sessionID: input.sessionID,
+            callID: input.callID,
+            agent,
+            category,
           })
         }
       }
@@ -614,11 +637,27 @@ export function createChiefOrchestratorHook(
       if (isBackgroundLaunch) {
         return
       }
+
+      if (input.sessionID && input.callID) {
+        const tracker = getTrackerForSession(input.sessionID)
+        const subagentSessionId = extractSessionIdFromOutput(outputStr)
+        const isError = outputStr.includes("❌")
+
+        if (isError) {
+          tracker.failTask(input.callID)
+        } else {
+          tracker.completeTask(input.callID, subagentSessionId)
+        }
+      }
       
       if (output.output && typeof output.output === "string") {
         const gitStats = getGitDiffStats(ctx.directory)
         const fileChanges = formatFileChanges(gitStats)
         const subagentSessionId = extractSessionIdFromOutput(output.output)
+
+        const progressTable = input.sessionID
+          ? getTrackerForSession(input.sessionID).formatProgress()
+          : ""
 
         const boulderState = readBoulderState(ctx.directory)
 
@@ -636,6 +675,8 @@ export function createChiefOrchestratorHook(
           output.output = `
 ## SUBAGENT WORK COMPLETED
 
+${progressTable}
+
 ${fileChanges}
 <system-reminder>
 ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)}
@@ -647,10 +688,25 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
             fileCount: gitStats.length,
           })
         } else {
-          output.output += `\n<system-reminder>\n${buildStandaloneVerificationReminder(subagentSessionId)}\n</system-reminder>`
+          const categoryMatch = output.output.match(/category:\s*(\w+)/)
+          const category = categoryMatch?.[1]
+          const summarized = summarizeOutput(output.output, { category })
+          const formattedSummary = formatSummarizedOutput(summarized)
 
-          log(`[${HOOK_NAME}] Verification reminder appended for orchestrator`, {
+          output.output = `${formattedSummary}
+
+${progressTable}
+
+${fileChanges ? `\n${fileChanges}` : ""}
+<system-reminder>
+${buildStandaloneVerificationReminder(subagentSessionId)}
+</system-reminder>`
+
+          log(`[${HOOK_NAME}] Output summarized for orchestrator`, {
             sessionID: input.sessionID,
+            originalLength: summarized.originalLength,
+            summaryLength: summarized.summary.length,
+            wasTruncated: summarized.wasTruncated,
             fileCount: gitStats.length,
           })
         }
