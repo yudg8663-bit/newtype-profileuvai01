@@ -545,6 +545,14 @@ export function createChiefOrchestratorHook(
       input: { tool: string; sessionID?: string; callID?: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
+      if (input.tool === "chief_task") {
+        log(`[${HOOK_NAME}] chief_task detected`, {
+          sessionID: input.sessionID,
+          callID: input.callID,
+          isOrchestrator: isCallerOrchestrator(input.sessionID),
+        })
+      }
+
       if (!isCallerOrchestrator(input.sessionID)) {
         return
       }
