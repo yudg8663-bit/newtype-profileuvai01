@@ -183,6 +183,20 @@ export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   quick: "Simple, fast tasks with minimal overhead",
 }
 
+/**
+ * Maps agent names to their corresponding category for prompt append injection.
+ * When chief_task is called with subagent_type, we still want to inject
+ * the category-specific prompt (e.g., CONFIDENCE format for fact-checker).
+ */
+export const AGENT_TO_CATEGORY_MAP: Record<string, string> = {
+  "fact-checker": "fact-check",
+  researcher: "research",
+  archivist: "archive",
+  writer: "writing",
+  editor: "editing",
+  extractor: "extraction",
+}
+
 const BUILTIN_CATEGORIES = Object.keys(DEFAULT_CATEGORIES).join(", ")
 
 export const CHIEF_TASK_DESCRIPTION = `Spawn agent task with category-based or direct agent selection.

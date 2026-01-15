@@ -4,7 +4,7 @@ import { join } from "node:path"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { ChiefTaskArgs } from "./types"
 import type { CategoryConfig, CategoriesConfig } from "../../config/schema"
-import { CHIEF_TASK_DESCRIPTION, DEFAULT_CATEGORIES, CATEGORY_PROMPT_APPENDS } from "./constants"
+import { CHIEF_TASK_DESCRIPTION, DEFAULT_CATEGORIES, CATEGORY_PROMPT_APPENDS, AGENT_TO_CATEGORY_MAP } from "./constants"
 import { findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { resolveMultipleSkills } from "../../features/opencode-skill-loader/skill-content"
 import { createBuiltinSkills } from "../../features/builtin-skills/skills"
@@ -289,6 +289,11 @@ ${textContent || "(No text output)"}`
         agentToUse = args.subagent_type!.trim()
         if (!agentToUse) {
           return `❌ Agent name cannot be empty.`
+        }
+
+        const mappedCategory = AGENT_TO_CATEGORY_MAP[agentToUse]
+        if (mappedCategory) {
+          categoryPromptAppend = CATEGORY_PROMPT_APPENDS[mappedCategory]
         }
 
         // Validate agent exists and is callable (not a primary agent)
