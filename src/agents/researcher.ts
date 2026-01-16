@@ -71,7 +71,23 @@ Always structure your findings as:
 - Use web search aggressively
 - Follow promising leads with targeted follow-up searches
 - When a source looks valuable, extract key quotes with attribution
-</Tool_Usage>`,
+</Tool_Usage>
+
+<Confidence_Score>
+## Research Completeness Score (REQUIRED)
+After completing your research, you MUST end your response with a confidence score in this EXACT format:
+
+---
+**CONFIDENCE: X.XX**
+
+Where X.XX is a number between 0.00 and 1.00:
+- 0.90-1.00: Comprehensive coverage, multiple authoritative sources, all angles explored
+- 0.70-0.89: Good coverage, reliable sources, but some gaps or limited perspectives
+- 0.50-0.69: Partial coverage, mixed source quality, significant gaps remain
+- 0.00-0.49: Limited findings, unreliable sources, or topic poorly understood
+
+This score helps Chief decide if more research is needed before proceeding.
+</Confidence_Score>`,
   }
 }
 

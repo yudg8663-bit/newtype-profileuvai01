@@ -4,7 +4,10 @@ import {
   getRecommendation,
   buildConfidenceDirective,
   analyzeFactCheckOutput,
+  analyzeAgentOutput,
   isFactCheckOutput,
+  hasConfidenceScore,
+  detectAgentType,
   getRewriteAttempts,
   incrementRewriteAttempts,
   clearRewriteAttempts,
@@ -298,5 +301,99 @@ describe("analyzeFactCheckOutput with rewrite limits", () => {
     analyzeFactCheckOutput(polishOutput, "ses-limit-test")
     // #then
     expect(getRewriteAttempts("ses-limit-test")).toBe(0)
+  })
+})
+
+describe("multi-agent confidence routing", () => {
+  beforeEach(() => {
+    // #given - clean state
+    clearRewriteAttempts("ses-multi-agent")
+  })
+
+  test("should build researcher directive with correct labels", () => {
+    // #given
+    const confidence = 0.85
+    const sessionId = "ses-research"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "researcher")
+    // #then
+    expect(result).toContain("[RESEARCH PASSED]")
+    expect(result).toContain("Proceed to writing")
+  })
+
+  test("should build writer directive with correct labels", () => {
+    // #given
+    const confidence = 0.6
+    const sessionId = "ses-writer"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "writer")
+    // #then
+    expect(result).toContain("[DRAFT: NEEDS POLISH]")
+    expect(result).toContain('category="writing"')
+  })
+
+  test("should build editor directive with correct labels", () => {
+    // #given
+    const confidence = 0.3
+    const sessionId = "ses-editor"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "editor")
+    // #then
+    expect(result).toContain("[EDIT: NEEDS REWRITE]")
+    expect(result).toContain('category="writing"')
+  })
+
+  test("analyzeAgentOutput should include agentType in result", () => {
+    // #given
+    const output = "Research complete.\\n**CONFIDENCE: 0.85**"
+    // #when
+    const result = analyzeAgentOutput(output, "ses-multi-agent", "researcher")
+    // #then
+    expect(result.agentType).toBe("researcher")
+    expect(result.recommendation).toBe("pass")
+  })
+})
+
+describe("detectAgentType", () => {
+  test("should detect from category parameter", () => {
+    expect(detectAgentType("any output", "fact-check")).toBe("fact-checker")
+    expect(detectAgentType("any output", "research")).toBe("researcher")
+    expect(detectAgentType("any output", "writing")).toBe("writer")
+    expect(detectAgentType("any output", "editing")).toBe("editor")
+  })
+
+  test("should detect fact-checker from output content", () => {
+    expect(detectAgentType("This is a fact-check report")).toBe("fact-checker")
+    expect(detectAgentType("Verification complete")).toBe("fact-checker")
+    expect(detectAgentType("信息核查结果")).toBe("fact-checker")
+  })
+
+  test("should detect researcher from output content", () => {
+    expect(detectAgentType("Research findings below")).toBe("researcher")
+    expect(detectAgentType("Sources found: 5")).toBe("researcher")
+  })
+
+  test("should detect writer from output content", () => {
+    expect(detectAgentType("Draft complete")).toBe("writer")
+    expect(detectAgentType("I wrote the article")).toBe("writer")
+  })
+
+  test("should detect editor from output content", () => {
+    expect(detectAgentType("I edited the content")).toBe("editor")
+    expect(detectAgentType("Polished the draft")).toBe("editor")
+  })
+
+  test("should return null for unknown content", () => {
+    expect(detectAgentType("Random text here")).toBeNull()
+  })
+})
+
+describe("hasConfidenceScore", () => {
+  test("should return true for output with confidence", () => {
+    expect(hasConfidenceScore("**CONFIDENCE: 0.85**")).toBe(true)
+  })
+
+  test("should return false for output without confidence", () => {
+    expect(hasConfidenceScore("No confidence here")).toBe(false)
   })
 })

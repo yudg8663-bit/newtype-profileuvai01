@@ -13,7 +13,7 @@ import { log } from "../../shared/logger"
 import type { BackgroundManager } from "../../features/background-agent"
 import { summarizeOutput, formatSummarizedOutput } from "./output-summarizer"
 import { getTrackerForSession, clearTrackerForSession } from "./task-progress-tracker"
-import { analyzeFactCheckOutput, isFactCheckOutput, clearRewriteAttempts } from "./confidence-router"
+import { analyzeAgentOutput, hasConfidenceScore, detectAgentType, clearRewriteAttempts } from "./confidence-router"
 
 export const HOOK_NAME = "chief-orchestrator"
 
@@ -704,15 +704,19 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
           const formattedSummary = formatSummarizedOutput(summarized)
 
           let confidenceDirective = ""
-          if (isFactCheckOutput(output.output)) {
-            const confidenceResult = analyzeFactCheckOutput(output.output, subagentSessionId)
-            if (confidenceResult.directive) {
-              confidenceDirective = `\n\n---\n${confidenceResult.directive}\n---`
-              log(`[${HOOK_NAME}] Confidence routing detected`, {
-                sessionID: input.sessionID,
-                confidence: confidenceResult.confidence,
-                recommendation: confidenceResult.recommendation,
-              })
+          if (hasConfidenceScore(output.output)) {
+            const agentType = detectAgentType(output.output, category)
+            if (agentType) {
+              const confidenceResult = analyzeAgentOutput(output.output, subagentSessionId, agentType)
+              if (confidenceResult.directive) {
+                confidenceDirective = `\n\n---\n${confidenceResult.directive}\n---`
+                log(`[${HOOK_NAME}] Confidence routing detected`, {
+                  sessionID: input.sessionID,
+                  agentType,
+                  confidence: confidenceResult.confidence,
+                  recommendation: confidenceResult.recommendation,
+                })
+              }
             }
           }
 
