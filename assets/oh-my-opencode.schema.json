@@ -1635,6 +1635,96 @@
         }
       }
     },
+    "confidence": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "type": "object",
+          "properties": {
+            "pass": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "polish": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "by_agent": {
+          "type": "object",
+          "properties": {
+            "fact-checker": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "researcher": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "writer": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "editor": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            }
+          }
+        },
+        "max_rewrite_attempts": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
     "mcp": {
       "type": "object",
       "properties": {

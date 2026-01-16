@@ -284,6 +284,35 @@ export const GitMasterConfigSchema = z.object({
   /** Add "Co-authored-by: Chief" trailer to commit messages (default: true) */
   include_co_authored_by: z.boolean().default(true),
 })
+
+/** Threshold configuration for a single agent category */
+export const ConfidenceThresholdSchema = z.object({
+  /** Confidence score threshold for "pass" (default: 0.8) */
+  pass: z.number().min(0).max(1).optional(),
+  /** Confidence score threshold for "polish" (default: 0.5) */
+  polish: z.number().min(0).max(1).optional(),
+})
+
+/** Agent-specific confidence thresholds */
+export const ConfidenceByAgentSchema = z.object({
+  /** Fact-check thresholds (stricter by default) */
+  "fact-checker": ConfidenceThresholdSchema.optional(),
+  /** Research thresholds */
+  researcher: ConfidenceThresholdSchema.optional(),
+  /** Writing thresholds (more lenient by default) */
+  writer: ConfidenceThresholdSchema.optional(),
+  /** Editing thresholds */
+  editor: ConfidenceThresholdSchema.optional(),
+})
+
+export const ConfidenceConfigSchema = z.object({
+  /** Default thresholds for all agents */
+  default: ConfidenceThresholdSchema.optional(),
+  /** Agent-specific threshold overrides */
+  by_agent: ConfidenceByAgentSchema.optional(),
+  /** Maximum rewrite attempts before escalating to user (default: 2) */
+  max_rewrite_attempts: z.number().min(1).max(10).optional(),
+})
 export const OhMyOpenCodeConfigSchema = z.object({
   $schema: z.string().optional(),
   disabled_mcps: z.array(AnyMcpNameSchema).optional(),
@@ -304,6 +333,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
   background_task: BackgroundTaskConfigSchema.optional(),
   notification: NotificationConfigSchema.optional(),
   git_master: GitMasterConfigSchema.optional(),
+  confidence: ConfidenceConfigSchema.optional(),
   mcp: McpConfigSchema.optional(),
 })
 
@@ -327,6 +357,9 @@ export type CategoryConfig = z.infer<typeof CategoryConfigSchema>
 export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>
 export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>
 export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>
+export type ConfidenceThreshold = z.infer<typeof ConfidenceThresholdSchema>
+export type ConfidenceByAgent = z.infer<typeof ConfidenceByAgentSchema>
+export type ConfidenceConfig = z.infer<typeof ConfidenceConfigSchema>
 export type McpConfig = z.infer<typeof McpConfigSchema>
 
 export {

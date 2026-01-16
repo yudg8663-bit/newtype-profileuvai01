@@ -31,6 +31,7 @@ import {
   createChiefOrchestratorHook,
   createPrometheusMdOnlyHook,
 } from "./hooks";
+import { setConfidenceConfig } from "./hooks/chief-orchestrator/confidence-router";
 import {
   contextCollector,
   createContextInjectorHook,
@@ -199,6 +200,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   const startWork = isHookEnabled("start-work")
     ? createStartWorkHook(ctx)
     : null;
+
+  if (pluginConfig.confidence) {
+    setConfidenceConfig(pluginConfig.confidence);
+  }
 
   const chiefOrchestrator = isHookEnabled("chief-orchestrator")
     ? createChiefOrchestratorHook(ctx)

@@ -12,6 +12,8 @@ import {
   incrementRewriteAttempts,
   clearRewriteAttempts,
   buildEscalateDirective,
+  setConfidenceConfig,
+  getConfidenceConfig,
 } from "./confidence-router"
 
 describe("extractConfidence", () => {
@@ -441,5 +443,114 @@ describe("hasConfidenceScore", () => {
 
   test("should return false for output without confidence", () => {
     expect(hasConfidenceScore("No confidence here")).toBe(false)
+  })
+})
+
+describe("configurable thresholds", () => {
+  beforeEach(() => {
+    setConfidenceConfig(undefined)
+    clearRewriteAttempts("ses-config-test")
+  })
+
+  test("should use default thresholds when no config", () => {
+    // #given
+    setConfidenceConfig(undefined)
+    // #when & #then
+    expect(getRecommendation(0.8)).toBe("pass")
+    expect(getRecommendation(0.79)).toBe("polish")
+    expect(getRecommendation(0.5)).toBe("polish")
+    expect(getRecommendation(0.49)).toBe("rewrite")
+  })
+
+  test("should use custom default thresholds", () => {
+    // #given
+    setConfidenceConfig({
+      default: { pass: 0.9, polish: 0.6 },
+    })
+    // #when & #then
+    expect(getRecommendation(0.9)).toBe("pass")
+    expect(getRecommendation(0.89)).toBe("polish")
+    expect(getRecommendation(0.6)).toBe("polish")
+    expect(getRecommendation(0.59)).toBe("rewrite")
+  })
+
+  test("should use agent-specific thresholds", () => {
+    // #given
+    setConfidenceConfig({
+      default: { pass: 0.8, polish: 0.5 },
+      by_agent: {
+        "fact-checker": { pass: 0.95, polish: 0.7 },
+        writer: { pass: 0.7, polish: 0.4 },
+      },
+    })
+    // #when & #then
+    expect(getRecommendation(0.95, "fact-checker")).toBe("pass")
+    expect(getRecommendation(0.94, "fact-checker")).toBe("polish")
+    expect(getRecommendation(0.7, "fact-checker")).toBe("polish")
+    expect(getRecommendation(0.69, "fact-checker")).toBe("rewrite")
+
+    expect(getRecommendation(0.7, "writer")).toBe("pass")
+    expect(getRecommendation(0.69, "writer")).toBe("polish")
+    expect(getRecommendation(0.4, "writer")).toBe("polish")
+    expect(getRecommendation(0.39, "writer")).toBe("rewrite")
+
+    expect(getRecommendation(0.8, "researcher")).toBe("pass")
+    expect(getRecommendation(0.79, "researcher")).toBe("polish")
+  })
+
+  test("should apply agent-specific thresholds in analyzeAgentOutput", () => {
+    // #given
+    setConfidenceConfig({
+      by_agent: {
+        "fact-checker": { pass: 0.95, polish: 0.7 },
+      },
+    })
+    const output = "Verification done. **CONFIDENCE: 0.85**"
+    // #when
+    const result = analyzeAgentOutput(output, "ses-config-test", "fact-checker")
+    // #then - 0.85 is below 0.95 pass threshold for fact-checker
+    expect(result.recommendation).toBe("polish")
+  })
+
+  test("should use configurable max_rewrite_attempts", () => {
+    // #given
+    setConfidenceConfig({
+      max_rewrite_attempts: 5,
+    })
+    const lowOutput = "**CONFIDENCE: 0.3**"
+    
+    // #when - fail 5 times
+    for (let i = 0; i < 5; i++) {
+      const result = analyzeAgentOutput(lowOutput, "ses-config-test", "fact-checker")
+      expect(result.recommendation).toBe("rewrite")
+      expect(result.directive).toContain(`Rewrite attempt: ${i + 1}/5`)
+    }
+    
+    // #then - 6th attempt should escalate
+    const finalResult = analyzeAgentOutput(lowOutput, "ses-config-test", "fact-checker")
+    expect(finalResult.recommendation).toBe("escalate")
+  })
+
+  test("should fall back to default when agent threshold partially defined", () => {
+    // #given
+    setConfidenceConfig({
+      default: { pass: 0.8, polish: 0.5 },
+      by_agent: {
+        writer: { pass: 0.7 },
+      },
+    })
+    // #when & #then - polish should fall back to default (0.5)
+    expect(getRecommendation(0.5, "writer")).toBe("polish")
+    expect(getRecommendation(0.49, "writer")).toBe("rewrite")
+  })
+
+  test("getConfidenceConfig should return current config", () => {
+    // #given
+    const config = { default: { pass: 0.9, polish: 0.6 } }
+    setConfidenceConfig(config)
+    // #when
+    const result = getConfidenceConfig()
+    // #then
+    expect(result).toEqual(config)
   })
 })

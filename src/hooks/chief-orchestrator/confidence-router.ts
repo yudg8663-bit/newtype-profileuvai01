@@ -5,11 +5,16 @@
  * routing recommendations for the orchestrator.
  */
 
-/** Maximum rewrite attempts before escalating to user */
-const MAX_REWRITE_ATTEMPTS = 2
+import type { ConfidenceConfig } from "../../config/schema"
+
+const DEFAULT_PASS_THRESHOLD = 0.8
+const DEFAULT_POLISH_THRESHOLD = 0.5
+const DEFAULT_MAX_REWRITE_ATTEMPTS = 2
 
 /** Per-agent rewrite attempt counter: session -> (agentType -> count) */
 const rewriteAttempts = new Map<string, Map<AgentType, number>>()
+
+let routerConfig: ConfidenceConfig | undefined
 
 export type AgentType = "fact-checker" | "researcher" | "writer" | "editor"
 export type Recommendation = "pass" | "polish" | "rewrite" | "escalate"
@@ -19,6 +24,46 @@ export interface ConfidenceResult {
   recommendation: Recommendation | null
   directive: string | null
   agentType?: AgentType
+}
+
+export function setConfidenceConfig(config: ConfidenceConfig | undefined): void {
+  routerConfig = config
+}
+
+export function getConfidenceConfig(): ConfidenceConfig | undefined {
+  return routerConfig
+}
+
+interface ResolvedThresholds {
+  pass: number
+  polish: number
+}
+
+function getThresholdsForAgent(agentType: AgentType): ResolvedThresholds {
+  if (!routerConfig) {
+    return { pass: DEFAULT_PASS_THRESHOLD, polish: DEFAULT_POLISH_THRESHOLD }
+  }
+
+  const agentThresholds = routerConfig.by_agent?.[agentType]
+  if (agentThresholds) {
+    return {
+      pass: agentThresholds.pass ?? routerConfig.default?.pass ?? DEFAULT_PASS_THRESHOLD,
+      polish: agentThresholds.polish ?? routerConfig.default?.polish ?? DEFAULT_POLISH_THRESHOLD,
+    }
+  }
+
+  if (routerConfig.default) {
+    return {
+      pass: routerConfig.default.pass ?? DEFAULT_PASS_THRESHOLD,
+      polish: routerConfig.default.polish ?? DEFAULT_POLISH_THRESHOLD,
+    }
+  }
+
+  return { pass: DEFAULT_PASS_THRESHOLD, polish: DEFAULT_POLISH_THRESHOLD }
+}
+
+function getMaxRewriteAttempts(): number {
+  return routerConfig?.max_rewrite_attempts ?? DEFAULT_MAX_REWRITE_ATTEMPTS
 }
 
 /**
@@ -39,11 +84,19 @@ export function extractConfidence(output: string): number | null {
 
 /**
  * Determine routing recommendation based on confidence score
+ * Uses agent-specific thresholds when configured
  */
-export function getRecommendation(confidence: number): "pass" | "polish" | "rewrite" {
-  if (confidence >= 0.8) {
+export function getRecommendation(confidence: number, agentType?: AgentType): "pass" | "polish" | "rewrite" {
+  const thresholds: ResolvedThresholds = agentType 
+    ? getThresholdsForAgent(agentType) 
+    : {
+        pass: routerConfig?.default?.pass ?? DEFAULT_PASS_THRESHOLD,
+        polish: routerConfig?.default?.polish ?? DEFAULT_POLISH_THRESHOLD,
+      }
+  
+  if (confidence >= thresholds.pass) {
     return "pass"
-  } else if (confidence >= 0.5) {
+  } else if (confidence >= thresholds.polish) {
     return "polish"
   } else {
     return "rewrite"
@@ -190,9 +243,10 @@ function getRewritePrompt(agentType: AgentType): string {
  */
 export function buildEscalateDirective(confidence: number, attempts: number): string {
   const confidencePercent = Math.round(confidence * 100)
+  const maxAttempts = getMaxRewriteAttempts()
   return `[FACT-CHECK: ESCALATE TO USER]
 Confidence: ${confidencePercent}% (LOW)
-Rewrite attempts: ${attempts}/${MAX_REWRITE_ATTEMPTS} (LIMIT REACHED)
+Rewrite attempts: ${attempts}/${maxAttempts} (LIMIT REACHED)
 
 ⚠️ AUTOMATIC REWRITING HAS FAILED.
 
@@ -234,12 +288,13 @@ export function analyzeAgentOutput(output: string, sessionId: string, agentType:
     }
   }
 
-  const baseRecommendation = getRecommendation(confidence)
+  const baseRecommendation = getRecommendation(confidence, agentType)
   
   if (baseRecommendation === "rewrite") {
     const attempts = incrementRewriteAttempts(sessionId, agentType)
+    const maxAttempts = getMaxRewriteAttempts()
     
-    if (attempts > MAX_REWRITE_ATTEMPTS) {
+    if (attempts > maxAttempts) {
       return {
         confidence,
         recommendation: "escalate",
@@ -249,7 +304,7 @@ export function analyzeAgentOutput(output: string, sessionId: string, agentType:
     }
     
     const directive = buildConfidenceDirective(confidence, sessionId, agentType) +
-      `\n\nRewrite attempt: ${attempts}/${MAX_REWRITE_ATTEMPTS}`
+      `\n\nRewrite attempt: ${attempts}/${maxAttempts}`
     
     return {
       confidence,
