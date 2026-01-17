@@ -146,6 +146,45 @@ export function createMyHook(ctx: PluginInput) {
 | Empty `catch {}` | Log and handle errors |
 | bash file ops in code | Node/Bun fs APIs |
 | Direct `bun publish` | GitHub Actions workflow |
+| `Bun.spawn` / `import { spawn } from "bun"` | `node:child_process` (see below) |
+
+## RUNTIME COMPATIBILITY (CRITICAL)
+
+**OpenCode loads plugins using a runtime that may not support all Bun-specific APIs.**
+
+### DO NOT USE:
+```typescript
+// ❌ WRONG - causes white screen / plugin load failure
+import { spawn } from "bun"
+Bun.spawn([...])
+Bun.write(path, data)
+globalThis.Bun.anything
+```
+
+### USE INSTEAD:
+```typescript
+// ✅ CORRECT - works in both Bun and Node.js
+import { spawn } from "node:child_process"
+import { writeFile } from "node:fs/promises"
+
+// Or use the shared utility:
+import { spawnAsync, writeFileSafe } from "../../shared/spawn"
+```
+
+### Why this matters:
+- Build uses `--target bun` which is required for proper bundling
+- But OpenCode's runtime may have `globalThis.Bun === undefined`
+- Node.js APIs work in both environments (Bun has Node.js compatibility layer)
+
+### Affected files (v1.0.19 fix):
+- `src/shared/spawn.ts` - New cross-runtime spawn utilities
+- `src/tools/interactive-bash/` - tmux execution
+- `src/hooks/interactive-bash-session/` - session cleanup
+- `src/hooks/comment-checker/` - CLI execution, binary download
+- `src/tools/ast-grep/` - CLI execution, binary download  
+- `src/tools/lsp/client.ts` - LSP server process management
+- `src/tools/glob/cli.ts` - ripgrep/find execution
+- `src/tools/grep/` - ripgrep execution, binary download
 
 ## CONFIGURATION
 
