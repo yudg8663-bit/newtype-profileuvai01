@@ -1715,6 +1715,36 @@
                   "maximum": 1
                 }
               }
+            },
+            "archivist": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "extractor": {
+              "type": "object",
+              "properties": {
+                "pass": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "polish": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
             }
           }
         },

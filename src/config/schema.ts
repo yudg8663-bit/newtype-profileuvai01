@@ -303,6 +303,10 @@ export const ConfidenceByAgentSchema = z.object({
   writer: ConfidenceThresholdSchema.optional(),
   /** Editing thresholds */
   editor: ConfidenceThresholdSchema.optional(),
+  /** Archive retrieval thresholds */
+  archivist: ConfidenceThresholdSchema.optional(),
+  /** Extraction thresholds */
+  extractor: ConfidenceThresholdSchema.optional(),
 })
 
 export const ConfidenceConfigSchema = z.object({

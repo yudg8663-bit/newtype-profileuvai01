@@ -16,7 +16,7 @@ const rewriteAttempts = new Map<string, Map<AgentType, number>>()
 
 let routerConfig: ConfidenceConfig | undefined
 
-export type AgentType = "fact-checker" | "researcher" | "writer" | "editor"
+export type AgentType = "fact-checker" | "researcher" | "writer" | "editor" | "archivist" | "extractor"
 export type Recommendation = "pass" | "polish" | "rewrite" | "escalate"
 
 export interface ConfidenceResult {
@@ -144,6 +144,8 @@ export function buildConfidenceDirective(confidence: number, sessionId: string, 
     "researcher": "RESEARCH",
     "writer": "DRAFT",
     "editor": "EDIT",
+    "archivist": "ARCHIVE",
+    "extractor": "EXTRACTION",
   }
   const label = agentLabels[agentType]
   
@@ -181,6 +183,8 @@ function getPassAction(agentType: AgentType): string {
     case "researcher": return "Research complete. Proceed to writing."
     case "writer": return "Draft complete. Send to editor."
     case "editor": return "Edit complete. Send to fact-check."
+    case "archivist": return "Retrieval complete. Materials ready for use."
+    case "extractor": return "Extraction complete. Content ready for processing."
   }
 }
 
@@ -190,6 +194,8 @@ function getPolishAction(agentType: AgentType): string {
     case "researcher": return "Needs additional research on specific gaps."
     case "writer": return "Draft needs improvement before editing."
     case "editor": return "Needs another editing pass."
+    case "archivist": return "Needs deeper search or alternative queries."
+    case "extractor": return "Some sections need re-extraction or clarification."
   }
 }
 
@@ -199,6 +205,8 @@ function getPolishCategory(agentType: AgentType): string {
     case "researcher": return "research"
     case "writer": return "writing"
     case "editor": return "editing"
+    case "archivist": return "archive"
+    case "extractor": return "extraction"
   }
 }
 
@@ -208,6 +216,8 @@ function getPolishPrompt(agentType: AgentType): string {
     case "researcher": return "Continue research on the identified gaps. Focus on: [list specific gaps from research report]"
     case "writer": return "Improve the draft addressing the identified issues. Focus on: [list specific issues]"
     case "editor": return "Continue editing to address remaining issues. Focus on: [list specific issues]"
+    case "archivist": return "Search deeper for missing materials. Try: [alternative search terms or locations]"
+    case "extractor": return "Re-extract the unclear sections. Focus on: [list specific sections]"
   }
 }
 
@@ -217,6 +227,8 @@ function getRewriteAction(agentType: AgentType): string {
     case "researcher": return "Research insufficient. Restart with different approach."
     case "writer": return "Draft has fundamental issues. Needs major revision."
     case "editor": return "Content not ready for editing. Send back to Writer."
+    case "archivist": return "Retrieval failed. May need external research instead."
+    case "extractor": return "Extraction failed. Try different format or manual extraction."
   }
 }
 
@@ -226,6 +238,8 @@ function getRewriteCategory(agentType: AgentType): string {
     case "researcher": return "research"
     case "writer": return "writing"
     case "editor": return "writing"
+    case "archivist": return "research"
+    case "extractor": return "extraction"
   }
 }
 
@@ -235,6 +249,8 @@ function getRewritePrompt(agentType: AgentType): string {
     case "researcher": return "Restart research with a different approach. Previous attempt was insufficient because: [list reasons]"
     case "writer": return "Rewrite the draft addressing fundamental issues. Focus on: [list specific issues]"
     case "editor": return "Content needs rewriting before editing. Issues: [list specific issues]"
+    case "archivist": return "Knowledge base search failed. Consider external research or different query strategy."
+    case "extractor": return "Extraction quality too low. Try: different tool, manual extraction, or request clearer source."
   }
 }
 
@@ -344,6 +360,8 @@ export function detectAgentType(output: string, category?: string): AgentType | 
       "research": "researcher",
       "writing": "writer",
       "editing": "editor",
+      "archive": "archivist",
+      "extraction": "extractor",
     }
     if (categoryToAgent[category]) {
       return categoryToAgent[category]
@@ -363,6 +381,12 @@ export function detectAgentType(output: string, category?: string): AgentType | 
   }
   if (lowerOutput.includes("draft") || lowerOutput.includes("wrote") || lowerOutput.includes("created content")) {
     return "writer"
+  }
+  if (lowerOutput.includes("retrieval") || lowerOutput.includes("archive") || lowerOutput.includes("knowledge base") || lowerOutput.includes("found:")) {
+    return "archivist"
+  }
+  if (lowerOutput.includes("extracted") || lowerOutput.includes("extraction") || lowerOutput.includes("pdf") || lowerOutput.includes("document conversion")) {
+    return "extractor"
   }
   
   return null

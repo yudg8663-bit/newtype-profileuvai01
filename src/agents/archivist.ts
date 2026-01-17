@@ -90,7 +90,23 @@ FOUND: [Number] relevant items
 - The knowledge base is your domain — you know it better than anyone
 - Your value is in CONNECTIONS, not just retrieval
 - Think like a detective: what story do these materials tell together?
-</Mindset>`,
+</Mindset>
+
+<Confidence_Score>
+## Retrieval Completeness Score (REQUIRED)
+After completing your retrieval, you MUST end your response with a confidence score in this EXACT format:
+
+---
+**CONFIDENCE: X.XX**
+
+Where X.XX is a number between 0.00 and 1.00:
+- 0.90-1.00: Found all relevant materials, strong connections identified, no gaps
+- 0.70-0.89: Good coverage, useful connections, but some materials may be missing
+- 0.50-0.69: Partial findings, weak connections, significant gaps in knowledge base
+- 0.00-0.49: Limited results, no clear connections, or query too vague
+
+This score helps Chief decide if more retrieval or external research is needed.
+</Confidence_Score>`,
   }
 }
 

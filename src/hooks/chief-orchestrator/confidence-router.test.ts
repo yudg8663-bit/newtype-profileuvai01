@@ -554,3 +554,122 @@ describe("configurable thresholds", () => {
     expect(result).toEqual(config)
   })
 })
+
+describe("archivist and extractor support", () => {
+  beforeEach(() => {
+    setConfidenceConfig(undefined)
+    clearRewriteAttempts("ses-archive-test")
+  })
+
+  test("detectAgentType should detect archivist from category", () => {
+    expect(detectAgentType("any output", "archive")).toBe("archivist")
+  })
+
+  test("detectAgentType should detect extractor from category", () => {
+    expect(detectAgentType("any output", "extraction")).toBe("extractor")
+  })
+
+  test("detectAgentType should detect archivist from output content", () => {
+    expect(detectAgentType("Retrieval complete. Found: 5 items")).toBe("archivist")
+    expect(detectAgentType("Searching the knowledge base...")).toBe("archivist")
+    expect(detectAgentType("Archive search results")).toBe("archivist")
+  })
+
+  test("detectAgentType should detect extractor from output content", () => {
+    expect(detectAgentType("Extracted content from PDF")).toBe("extractor")
+    expect(detectAgentType("Extraction complete")).toBe("extractor")
+    expect(detectAgentType("Document conversion finished")).toBe("extractor")
+  })
+
+  test("buildConfidenceDirective should work for archivist", () => {
+    // #given
+    const confidence = 0.85
+    const sessionId = "ses-archive"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "archivist")
+    // #then
+    expect(result).toContain("[ARCHIVE PASSED]")
+    expect(result).toContain("85%")
+    expect(result).toContain("Materials ready for use")
+  })
+
+  test("buildConfidenceDirective should work for extractor", () => {
+    // #given
+    const confidence = 0.65
+    const sessionId = "ses-extract"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "extractor")
+    // #then
+    expect(result).toContain("[EXTRACTION: NEEDS POLISH]")
+    expect(result).toContain("65%")
+    expect(result).toContain('category="extraction"')
+  })
+
+  test("analyzeAgentOutput should route archivist correctly", () => {
+    // #given
+    const output = "Retrieval complete. Found: 3 items.\\n**CONFIDENCE: 0.75**"
+    // #when
+    const result = analyzeAgentOutput(output, "ses-archive-test", "archivist")
+    // #then
+    expect(result.agentType).toBe("archivist")
+    expect(result.recommendation).toBe("polish")
+  })
+
+  test("analyzeAgentOutput should route extractor correctly", () => {
+    // #given
+    const output = "Extraction complete.\\n**CONFIDENCE: 0.92**"
+    // #when
+    const result = analyzeAgentOutput(output, "ses-archive-test", "extractor")
+    // #then
+    expect(result.agentType).toBe("extractor")
+    expect(result.recommendation).toBe("pass")
+  })
+
+  test("archivist rewrite should suggest external research", () => {
+    // #given
+    const confidence = 0.3
+    const sessionId = "ses-archive"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "archivist")
+    // #then
+    expect(result).toContain("[ARCHIVE: NEEDS REWRITE]")
+    expect(result).toContain('category="research"')
+  })
+
+  test("extractor low confidence should suggest different approach", () => {
+    // #given
+    const confidence = 0.25
+    const sessionId = "ses-extract"
+    // #when
+    const result = buildConfidenceDirective(confidence, sessionId, "extractor")
+    // #then
+    expect(result).toContain("[EXTRACTION: NEEDS REWRITE]")
+    expect(result).toContain('category="extraction"')
+  })
+
+  test("configurable thresholds should work for archivist", () => {
+    // #given
+    setConfidenceConfig({
+      by_agent: {
+        archivist: { pass: 0.9, polish: 0.6 },
+      },
+    })
+    // #when & #then
+    expect(getRecommendation(0.9, "archivist")).toBe("pass")
+    expect(getRecommendation(0.89, "archivist")).toBe("polish")
+    expect(getRecommendation(0.59, "archivist")).toBe("rewrite")
+  })
+
+  test("configurable thresholds should work for extractor", () => {
+    // #given
+    setConfidenceConfig({
+      by_agent: {
+        extractor: { pass: 0.85, polish: 0.5 },
+      },
+    })
+    // #when & #then
+    expect(getRecommendation(0.85, "extractor")).toBe("pass")
+    expect(getRecommendation(0.84, "extractor")).toBe("polish")
+    expect(getRecommendation(0.49, "extractor")).toBe("rewrite")
+  })
+})
