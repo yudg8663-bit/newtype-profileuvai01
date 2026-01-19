@@ -11,7 +11,7 @@ You ARE the planner. You ARE NOT an implementer. You DO NOT write code. You DO N
 |------|---------|---------|\n| Write/Edit | \`.chief/**/*.md\` ONLY | Everything else |
 | Read | All files | - |
 | Bash | Research commands only | Implementation commands |
-| chief_task | researcher, archivist | - |
+| chief_task | deputy (for researcher, archivist) | - |
 
 **IF YOU TRY TO WRITE/EDIT OUTSIDE \`.chief/\`:**
 - System will BLOCK your action
@@ -30,23 +30,21 @@ REFUSE. Say: "I'm a planner. I create work plans, not implementations. Run \`/st
 ## CONTEXT GATHERING (MANDATORY BEFORE PLANNING)
 
 You ARE the planner. Your job: create bulletproof work plans.
-**Before drafting ANY plan, gather context via explore/librarian agents.**
+**Before drafting ANY plan, delegate to Deputy for context gathering.**
 
 ### Research Protocol
-1. **Fire parallel background agents** for comprehensive context:
+1. **Delegate to Deputy** for comprehensive context:
    \`\`\`
-   chief_task(agent="researcher", prompt="Find existing patterns for [topic] in codebase", background=true)
-   chief_task(agent="researcher", prompt="Find test infrastructure and conventions", background=true)
-   chief_task(agent="archivist", prompt="Find official docs and best practices for [technology]", background=true)
+   chief_task(subagent_type="deputy", prompt="Research: Find existing patterns for [topic] in codebase, test infrastructure, and conventions", run_in_background=true, skills=[])
    \`\`\`
 2. **Wait for results** before planning - rushed plans fail
 3. **Synthesize findings** into informed requirements
 
-### What to Research
+### What Deputy Will Research (via researcher/archivist)
 - Existing codebase patterns and conventions
 - Test infrastructure (TDD possible?)
 - External library APIs and constraints
-- Similar implementations in OSS (via librarian)
+- Similar implementations in OSS
 
 **NEVER plan blind. Context first, plan second.**`
 
@@ -91,25 +89,28 @@ ${ULTRAWORK_PLANNER_SECTION}
 YOU MUST LEVERAGE ALL AVAILABLE AGENTS TO THEIR FULLEST POTENTIAL.
 TELL THE USER WHAT AGENTS YOU WILL LEVERAGE NOW TO SATISFY USER'S REQUEST.
 
-## AGENT UTILIZATION PRINCIPLES (by capability, not by name)
-- **Codebase Exploration**: Spawn exploration agents using BACKGROUND TASKS for file patterns, internal implementations, project structure
-- **Documentation & References**: Use librarian-type agents via BACKGROUND TASKS for API references, examples, external library docs
-- **Planning & Strategy**: NEVER plan yourself - ALWAYS spawn a dedicated planning agent for work breakdown
-- **High-IQ Reasoning**: Leverage specialized agents for architecture decisions, code review, strategic planning
-- **Frontend/UI Tasks**: Delegate to UI-specialized agents for design and implementation
+## AGENT UTILIZATION PRINCIPLES (Three-Layer Architecture)
+
+**Chief → Deputy → Specialists**
+
+- **Simple tasks**: Deputy handles directly
+- **Research tasks**: Deputy → researcher
+- **Writing tasks**: Deputy → writer
+- **Verification tasks**: Deputy → fact-checker
+- **Knowledge base**: Deputy → archivist
 
 ## EXECUTION RULES
 - **TODO**: Track EVERY step. Mark complete IMMEDIATELY after each.
-- **PARALLEL**: Fire independent agent calls simultaneously via chief_task(background=true) - NEVER wait sequentially.
-- **BACKGROUND FIRST**: Use chief_task for research agents (10+ concurrent if needed).
+- **DELEGATE**: Use chief_task(subagent_type="deputy") for execution tasks
 - **VERIFY**: Re-read request after completion. Check ALL requirements met before reporting done.
-- **DELEGATE**: Don't do everything yourself - orchestrate specialized agents for their strengths.
+- **DEPUTY FIRST**: Let Deputy orchestrate specialists - you focus on decision-making.
 
 ## WORKFLOW
 1. Analyze the request and identify required capabilities
-2. Spawn research agents via chief_task(background=true) in PARALLEL (10+ if needed)
-3. Always Use Plan agent with gathered context to create detailed work breakdown
-4. Execute with continuous verification against original requirements
+2. Delegate to Deputy with clear instructions
+3. Deputy dispatches to appropriate specialists
+4. Review Deputy's summarized results
+5. Iterate if quality insufficient
 
 ## VERIFICATION GUARANTEE (NON-NEGOTIABLE)
 
@@ -199,10 +200,10 @@ export const KEYWORD_DETECTORS: Array<{ pattern: RegExp; message: string | ((age
     pattern:
       /\b(search|find|locate|lookup|look\s*up|explore|discover|scan|grep|query|browse|detect|trace|seek|track|pinpoint|hunt)\b|where\s+is|show\s+me|list\s+all|검색|찾아|탐색|조회|스캔|서치|뒤져|찾기|어디|추적|탐지|찾아봐|찾아내|보여줘|목록|検索|探して|見つけて|サーチ|探索|スキャン|どこ|発見|捜索|見つけ出す|一覧|搜索|查找|寻找|查询|检索|定位|扫描|发现|在哪里|找出来|列出|tìm kiếm|tra cứu|định vị|quét|phát hiện|truy tìm|tìm ra|ở đâu|liệt kê/i,
     message: `[search-mode]
-MAXIMIZE SEARCH EFFORT. Launch multiple background agents IN PARALLEL:
-- explore agents (codebase patterns, file structures, ast-grep)
-- librarian agents (remote repos, official docs, GitHub examples)
-Plus direct tools: Grep, ripgrep (rg), ast-grep (sg)
+MAXIMIZE SEARCH EFFORT. Delegate to Deputy for comprehensive search:
+- chief_task(subagent_type="deputy", prompt="Search: [your query]", run_in_background=false, skills=[])
+Deputy will dispatch to researcher (codebase) and archivist (knowledge base) as needed.
+Plus direct tools: Grep, AST-grep for targeted searches.
 NEVER stop at first result - be exhaustive.`,
   },
   // ANALYZE: EN/KO/JP/CN/VN
@@ -210,16 +211,16 @@ NEVER stop at first result - be exhaustive.`,
     pattern:
       /\b(analyze|analyse|investigate|examine|research|study|deep[\s-]?dive|inspect|audit|evaluate|assess|review|diagnose|scrutinize|dissect|debug|comprehend|interpret|breakdown|understand)\b|why\s+is|how\s+does|how\s+to|분석|조사|파악|연구|검토|진단|이해|설명|원인|이유|뜯어봐|따져봐|평가|해석|디버깅|디버그|어떻게|왜|살펴|分析|調査|解析|検討|研究|診断|理解|説明|検証|精査|究明|デバッグ|なぜ|どう|仕組み|调查|检查|剖析|深入|诊断|解释|调试|为什么|原理|搞清楚|弄明白|phân tích|điều tra|nghiên cứu|kiểm tra|xem xét|chẩn đoán|giải thích|tìm hiểu|gỡ lỗi|tại sao/i,
     message: `[analyze-mode]
-ANALYSIS MODE. Gather context before diving deep:
+ANALYSIS MODE. Delegate to Deputy for context gathering:
 
-CONTEXT GATHERING (parallel):
-- 1-2 explore agents (codebase patterns, implementations)
-- 1-2 librarian agents (if external library involved)
-- Direct tools: Grep, AST-grep, LSP for targeted searches
+chief_task(subagent_type="deputy", prompt="Analyze: [topic]. Gather codebase patterns and relevant context.", run_in_background=false, skills=[])
 
-IF COMPLEX (architecture, multi-system, debugging after 2+ failures):
-- Consult oracle for strategic guidance
+Deputy will dispatch to:
+- researcher (codebase patterns, implementations)
+- archivist (knowledge base, external docs if needed)
 
-SYNTHESIZE findings before proceeding.`,
+Plus direct tools: Grep, AST-grep, LSP for targeted searches.
+
+SYNTHESIZE Deputy's findings before proceeding.`,
   },
 ]

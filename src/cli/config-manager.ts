@@ -277,16 +277,16 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
     agents["Sisyphus"] = { model: "opencode/glm-4.7-free" }
   }
 
-  agents["librarian"] = { model: "opencode/glm-4.7-free" }
+  agents["archivist"] = { model: "opencode/glm-4.7-free" }
 
   // Gemini models use `antigravity-` prefix for explicit Antigravity quota routing
   // @see ANTIGRAVITY_PROVIDER_CONFIG comments for rationale
   if (installConfig.hasGemini) {
-    agents["explore"] = { model: "google/antigravity-gemini-3-flash" }
+    agents["researcher"] = { model: "google/antigravity-gemini-3-flash" }
   } else if (installConfig.hasClaude && installConfig.isMax20) {
-    agents["explore"] = { model: "anthropic/claude-haiku-4-5" }
+    agents["researcher"] = { model: "anthropic/claude-haiku-4-5" }
   } else {
-    agents["explore"] = { model: "opencode/glm-4.7-free" }
+    agents["researcher"] = { model: "opencode/glm-4.7-free" }
   }
 
   if (!installConfig.hasChatGPT) {
@@ -703,7 +703,7 @@ export function detectCurrentConfig(): DetectedConfig {
     if (agents["Sisyphus"]?.model === "opencode/glm-4.7-free") {
       result.hasClaude = false
       result.isMax20 = false
-    } else if (agents["librarian"]?.model === "opencode/glm-4.7-free") {
+    } else if (agents["archivist"]?.model === "opencode/glm-4.7-free") {
       result.hasClaude = true
       result.isMax20 = false
     }

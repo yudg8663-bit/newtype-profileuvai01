@@ -80,7 +80,7 @@ Should I proceed with [recommendation], or would you prefer differently?
 
 \`\`\`
 TodoWrite([
-  {"id": "phase-1", "content": "PHASE 1: Codebase Analysis - launch parallel explore agents", "status": "pending", "priority": "high"},
+  {"id": "phase-1", "content": "PHASE 1: Codebase Analysis - delegate to Deputy for exploration", "status": "pending", "priority": "high"},
   {"id": "phase-2", "content": "PHASE 2: Build Codemap - map dependencies and impact zones", "status": "pending", "priority": "high"},
   {"id": "phase-3", "content": "PHASE 3: Test Assessment - analyze test coverage and verification strategy", "status": "pending", "priority": "high"},
   {"id": "phase-4", "content": "PHASE 4: Plan Generation - invoke Plan agent for detailed refactoring plan", "status": "pending", "priority": "high"},
@@ -95,49 +95,23 @@ TodoWrite([
 
 **Mark phase-1 as in_progress.**
 
-## 1.1: Launch Parallel Explore Agents (BACKGROUND)
+## 1.1: Delegate Exploration to Deputy
 
-Fire ALL of these simultaneously using \`call_omo_agent\`:
+Delegate comprehensive codebase analysis to Deputy:
 
 \`\`\`
-// Agent 1: Find the refactoring target
-call_omo_agent(
-  subagent_type="explore",
-  run_in_background=true,
-  prompt="Find all occurrences and definitions of [TARGET]. 
-  Report: file paths, line numbers, usage patterns."
-)
-
-// Agent 2: Find related code
-call_omo_agent(
-  subagent_type="explore", 
-  run_in_background=true,
-  prompt="Find all code that imports, uses, or depends on [TARGET].
-  Report: dependency chains, import graphs."
-)
-
-// Agent 3: Find similar patterns
-call_omo_agent(
-  subagent_type="explore",
-  run_in_background=true,
-  prompt="Find similar code patterns to [TARGET] in the codebase.
-  Report: analogous implementations, established conventions."
-)
-
-// Agent 4: Find tests
-call_omo_agent(
-  subagent_type="explore",
-  run_in_background=true,
-  prompt="Find all test files related to [TARGET].
-  Report: test file paths, test case names, coverage indicators."
-)
-
-// Agent 5: Architecture context
-call_omo_agent(
-  subagent_type="explore",
-  run_in_background=true,
-  prompt="Find architectural patterns and module organization around [TARGET].
-  Report: module boundaries, layer structure, design patterns in use."
+chief_task(
+  subagent_type="deputy",
+  prompt="Analyze refactoring target [TARGET]. Research:
+  1. All occurrences and definitions (file paths, line numbers, usage patterns)
+  2. Code that imports, uses, or depends on [TARGET] (dependency chains)
+  3. Similar code patterns in the codebase (established conventions)
+  4. All test files related to [TARGET] (test coverage)
+  5. Architectural patterns and module organization around [TARGET]
+  
+  Return a structured summary of findings.",
+  run_in_background=false,
+  skills=[]
 )
 \`\`\`
 
@@ -278,16 +252,16 @@ ls -la *_test.go
 ## 3.2: Analyze Test Coverage
 
 \`\`\`
-// Find all tests related to target
-call_omo_agent(
-  subagent_type="explore",
-  run_in_background=false,  // Need this synchronously
+chief_task(
+  subagent_type="deputy",
   prompt="Analyze test coverage for [TARGET]:
   1. Which test files cover this code?
   2. What test cases exist?
   3. Are there integration tests?
   4. What edge cases are tested?
-  5. Estimated coverage percentage?"
+  5. Estimated coverage percentage?",
+  run_in_background=false,
+  skills=[]
 )
 \`\`\`
 
@@ -602,17 +576,18 @@ Leverage the full LSP toolset (\`lsp_*\`) for precision analysis. Key patterns:
 Use \`ast_grep_search\` and \`ast_grep_replace\` for structural transformations.
 **Critical**: Always \`dryRun=true\` first, review, then execute.
 
-## Agents
-- \`explore\`: Parallel codebase pattern discovery
-- \`plan\`: Detailed refactoring plan generation
-- \`oracle\`: Read-only consultation for complex architectural decisions and debugging
-- \`librarian\`: **Use proactively** when encountering deprecated methods or library migration tasks. Query official docs and OSS examples for modern replacements.
+## Agents (via Deputy)
+Delegate to Deputy who will dispatch to appropriate specialists:
+- **researcher**: Codebase pattern discovery
+- **archivist**: Knowledge base and external docs
+- **writer**: Documentation generation
+- **editor**: Code refinement
 
 ## Deprecated Code & Library Migration
 When you encounter deprecated methods/APIs during refactoring:
-1. Fire \`librarian\` to find the recommended modern alternative
+1. Delegate to Deputy: "Research modern alternative for [deprecated API]"
 2. **DO NOT auto-upgrade to latest version** unless user explicitly requests migration
-3. If user requests library migration, use \`librarian\` to fetch latest API docs before making changes
+3. If user requests library migration, Deputy will fetch latest API docs via archivist
 
 ---
 

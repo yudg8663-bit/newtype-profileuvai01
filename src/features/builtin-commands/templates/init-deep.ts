@@ -15,7 +15,7 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 ## Workflow (High-Level)
 
 1. **Discovery + Analysis** (concurrent)
-   - Fire background explore agents immediately
+   - Delegate to Deputy for codebase exploration
    - Main session: bash structure + LSP codemap + read existing AGENTS.md
 2. **Score & Decide** - Determine AGENTS.md locations from merged findings
 3. **Generate** - Root first, then subdirs in parallel
@@ -25,7 +25,7 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 **TodoWrite ALL phases. Mark in_progress → completed in real-time.**
 \`\`\`
 TodoWrite([
-  { id: "discovery", content: "Fire explore agents + LSP codemap + read existing", status: "pending", priority: "high" },
+  { id: "discovery", content: "Delegate to Deputy for exploration + LSP codemap + read existing", status: "pending", priority: "high" },
   { id: "scoring", content: "Score directories, determine locations", status: "pending", priority: "high" },
   { id: "generate", content: "Generate AGENTS.md files (root + subdirs)", status: "pending", priority: "high" },
   { id: "review", content: "Deduplicate, validate, trim", status: "pending", priority: "medium" }
@@ -39,49 +39,53 @@ TodoWrite([
 
 **Mark "discovery" as in_progress.**
 
-### Fire Background Explore Agents IMMEDIATELY
+### Delegate Exploration to Deputy
 
-Don't wait—these run async while main session works.
+Delegate comprehensive codebase analysis to Deputy:
 
 \`\`\`
-// Fire all at once, collect results later
-sisyphus_task(agent="explore", prompt="Project structure: PREDICT standard patterns for detected language → REPORT deviations only")
-sisyphus_task(agent="explore", prompt="Entry points: FIND main files → REPORT non-standard organization")
-sisyphus_task(agent="explore", prompt="Conventions: FIND config files (.eslintrc, pyproject.toml, .editorconfig) → REPORT project-specific rules")
-sisyphus_task(agent="explore", prompt="Anti-patterns: FIND 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments → LIST forbidden patterns")
-sisyphus_task(agent="explore", prompt="Build/CI: FIND .github/workflows, Makefile → REPORT non-standard patterns")
-sisyphus_task(agent="explore", prompt="Test patterns: FIND test configs, test structure → REPORT unique conventions")
+chief_task(
+  subagent_type="deputy",
+  prompt="Analyze codebase for AGENTS.md generation. Research:
+  1. Project structure: standard patterns vs deviations
+  2. Entry points: main files and non-standard organization
+  3. Conventions: config files (.eslintrc, pyproject.toml, .editorconfig)
+  4. Anti-patterns: 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments
+  5. Build/CI: .github/workflows, Makefile patterns
+  6. Test patterns: test configs and structure
+  
+  Return structured findings for documentation generation.",
+  run_in_background=true,
+  skills=[]
+)
 \`\`\`
 
-<dynamic-agents>
-**DYNAMIC AGENT SPAWNING**: After bash analysis, spawn ADDITIONAL explore agents based on project scale:
+<dynamic-analysis>
+**DYNAMIC DEPTH**: For large projects, Deputy will automatically dispatch multiple researcher tasks:
 
-| Factor | Threshold | Additional Agents |
-|--------|-----------|-------------------|
-| **Total files** | >100 | +1 per 100 files |
-| **Total lines** | >10k | +1 per 10k lines |
-| **Directory depth** | ≥4 | +2 for deep exploration |
-| **Large files (>500 lines)** | >10 files | +1 for complexity hotspots |
-| **Monorepo** | detected | +1 per package/workspace |
-| **Multiple languages** | >1 | +1 per language |
+| Factor | Threshold | Deputy Action |
+|--------|-----------|---------------|
+| **Total files** | >100 | More thorough file analysis |
+| **Directory depth** | ≥4 | Deep module exploration |
+| **Large files (>500 lines)** | >10 files | Complexity hotspot analysis |
+| **Monorepo** | detected | Per-package analysis |
 
 \`\`\`bash
-# Measure project scale first
+# Measure project scale first (optional - Deputy will assess)
 total_files=$(find . -type f -not -path '*/node_modules/*' -not -path '*/.git/*' | wc -l)
-total_lines=$(find . -type f \\( -name "*.ts" -o -name "*.py" -o -name "*.go" \\) -not -path '*/node_modules/*' -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}')
-large_files=$(find . -type f \\( -name "*.ts" -o -name "*.py" \\) -not -path '*/node_modules/*' -exec wc -l {} + 2>/dev/null | awk '$1 > 500 {count++} END {print count+0}')
 max_depth=$(find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' | awk -F/ '{print NF}' | sort -rn | head -1)
 \`\`\`
 
-Example spawning:
+For very large projects, send additional Deputy tasks:
 \`\`\`
-// 500 files, 50k lines, depth 6, 15 large files → spawn 5+5+2+1 = 13 additional agents
-sisyphus_task(agent="explore", prompt="Large file analysis: FIND files >500 lines, REPORT complexity hotspots")
-sisyphus_task(agent="explore", prompt="Deep modules at depth 4+: FIND hidden patterns, internal conventions")
-sisyphus_task(agent="explore", prompt="Cross-cutting concerns: FIND shared utilities across directories")
-// ... more based on calculation
+chief_task(
+  subagent_type="deputy",
+  prompt="Deep analysis for large codebase: Find files >500 lines, complexity hotspots, cross-cutting concerns.",
+  run_in_background=true,
+  skills=[]
+)
 \`\`\`
-</dynamic-agents>
+</dynamic-analysis>
 
 ### Main Session: Concurrent Analysis
 
@@ -129,7 +133,7 @@ lsp_workspace_symbols(filePath=".", query="function")
 lsp_find_references(filePath="...", line=X, character=Y)
 \`\`\`
 
-**LSP Fallback**: If unavailable, rely on explore agents + AST-grep.
+**LSP Fallback**: If unavailable, rely on Deputy + AST-grep.
 
 ### Collect Background Results
 
@@ -138,7 +142,7 @@ lsp_find_references(filePath="...", line=X, character=Y)
 for each task_id: background_output(task_id="...")
 \`\`\`
 
-**Merge: bash + LSP + existing + explore findings. Mark "discovery" as completed.**
+**Merge: bash + LSP + existing + Deputy findings. Mark "discovery" as completed.**
 
 ---
 
@@ -153,7 +157,7 @@ for each task_id: background_output(task_id="...")
 | File count | 3x | >20 | bash |
 | Subdir count | 2x | >5 | bash |
 | Code ratio | 2x | >70% | bash |
-| Unique patterns | 1x | Has own config | explore |
+| Unique patterns | 1x | Has own config | Deputy |
 | Module boundary | 2x | Has index.ts/__init__.py | bash |
 | Symbol density | 2x | >30 symbols | LSP |
 | Export count | 2x | >10 exports | LSP |
@@ -291,8 +295,8 @@ Hierarchy:
 
 ## Anti-Patterns
 
-- **Static agent count**: MUST vary agents based on project size/depth
-- **Sequential execution**: MUST parallel (explore + LSP concurrent)
+- **Static approach**: MUST adapt depth of analysis based on project size
+- **Sequential execution**: MUST parallel (Deputy + LSP concurrent)
 - **Ignoring existing**: ALWAYS read existing first, even with --create-new
 - **Over-documenting**: Not every dir needs AGENTS.md
 - **Redundancy**: Child never repeats parent

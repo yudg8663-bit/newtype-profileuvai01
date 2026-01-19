@@ -53,7 +53,6 @@ import {
 } from "./features/claude-code-session-state";
 import {
   builtinTools,
-  createCallOmoAgent,
   createBackgroundTools,
   createLookAt,
   createSkillTool,
@@ -235,7 +234,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     : null;
   const backgroundTools = createBackgroundTools(backgroundManager, ctx.client);
 
-  const callOmoAgent = createCallOmoAgent(ctx, backgroundManager);
   const lookAt = createLookAt(ctx);
   const chiefTask = createChiefTask({
     manager: backgroundManager,
@@ -307,7 +305,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     tool: {
       ...builtinTools,
       ...backgroundTools,
-      call_omo_agent: callOmoAgent,
       look_at: lookAt,
       chief_task: chiefTask,
       skill: skillTool,
@@ -474,15 +471,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
       if (input.tool === "task") {
         const args = output.args as Record<string, unknown>;
-        const subagentType = args.subagent_type as string;
-        const isExploreOrLibrarian = ["explore", "librarian"].includes(
-          subagentType
-        );
 
         args.tools = {
           ...(args.tools as Record<string, boolean> | undefined),
           chief_task: false,
-          ...(isExploreOrLibrarian ? { call_omo_agent: false } : {}),
         };
       }
 

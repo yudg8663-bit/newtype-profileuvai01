@@ -78,7 +78,7 @@ Session ID: ses_abc123
 Messages: 45
 Date Range: 2025-12-20 10:30:00 to 2025-12-24 15:45:30
 Duration: 4 days, 5 hours
-Agents Used: build, oracle, librarian
+Agents Used: deputy, researcher, archivist
 Has Todos: Yes (12 items, 8 completed)
 Has Transcript: Yes (234 entries)`
 

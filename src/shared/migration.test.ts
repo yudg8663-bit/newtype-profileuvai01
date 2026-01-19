@@ -232,7 +232,6 @@ describe("migration maps", () => {
     expect(AGENT_NAME_MAP["OmO"]).toBe("chief")
     expect(AGENT_NAME_MAP["sisyphus"]).toBe("chief")
     expect(AGENT_NAME_MAP["oracle"]).toBe("researcher")
-    expect(AGENT_NAME_MAP["librarian"]).toBe("archivist")
   })
 
   test("HOOK_NAME_MAP contains anthropic-auto-compact migration", () => {

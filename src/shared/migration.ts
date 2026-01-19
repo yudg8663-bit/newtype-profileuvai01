@@ -16,8 +16,6 @@ export const AGENT_NAME_MAP: Record<string, string> = {
   metis: "chief",
   build: "deputy",
   oracle: "researcher",
-  librarian: "archivist",
-  explore: "researcher",
   "frontend-ui-ux-engineer": "writer",
   "document-writer": "writer",
   "multimodal-looker": "extractor",
