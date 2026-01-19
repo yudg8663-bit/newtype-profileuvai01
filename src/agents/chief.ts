@@ -1,54 +1,59 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import {
-  createAgentToolRestrictions,
+  createAgentToolAllowlist,
   migrateAgentConfig,
 } from "../shared/permission-compat"
 
 const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
 
 /**
- * Chief 被阻止使用的工具 — 强制通过 Deputy 委派执行任务
+ * Chief 允许使用的工具白名单
  *
- * 这是三层架构的关键硬约束：
- * - Chief (思考者) 只负责规划、决策、审核
- * - Deputy (执行者) 负责调度专业 Agents
- * - 专业 Agents 负责实际执行
- *
- * 阻止 Chief 直接使用执行类工具，迫使它必须委派给 Deputy
+ * 三层架构的关键硬约束：使用白名单而非黑名单
+ * - 只有明确列出的工具可以使用
+ * - 任何未列出的工具（包括用户安装的 MCP）都会被阻止
+ * - 强制 Chief 通过 `chief_task` 委派执行任务给 Deputy
  */
-const CHIEF_BLOCKED_TOOLS = [
-  // MCP 搜索工具 — 应该委派给 researcher
-  // Tavily MCP (mcp name: "tavily", tool names have "tavily-" prefix)
-  "tavily_tavily-search",
-  "tavily_tavily-extract",
-  "tavily_tavily-get-search-context",
-  "tavily_tavily-qna-search",
-  // Firecrawl MCP
-  "firecrawl_firecrawl_scrape",
-  "firecrawl_firecrawl_map",
-  "firecrawl_firecrawl_crawl",
-  "firecrawl_firecrawl_check_crawl_status",
-  // Exa websearch MCP
-  "websearch_web_search_exa",
-  // Context7 MCP
-  "context7_resolve-library-id",
-  "context7_query-docs",
-  "context7_get-library-docs",
-  // grep.app MCP
-  "grep_app_searchgithub",
+const CHIEF_ALLOWED_TOOLS = [
+  // ========== 唯一的执行路径 ==========
+  "chief_task",
 
-  // 文件写入工具 — 应该委派给 writer/editor
-  "Write",
-  "write",
-  "Edit",
-  "edit",
-  "MultiEdit",
-  "multiedit",
+  // ========== 任务管理 ==========
+  "todowrite",
+  "todoread",
 
-  // 旧的委派工具 — 已废弃，统一用 chief_task
-  "task",
-  "call_omo_agent",
+  // ========== 只读理解（文件系统）==========
+  "read",
+  "glob",
+  "grep",
+
+  // ========== LSP 只读工具（代码智能）==========
+  "lsp_hover",
+  "lsp_goto_definition",
+  "lsp_find_references",
+  "lsp_document_symbols",
+  "lsp_workspace_symbols",
+  "lsp_diagnostics",
+  "lsp_servers",
+  "lsp_code_actions",
+
+  // ========== Session 回顾 ==========
+  "session_list",
+  "session_read",
+  "session_search",
+  "session_info",
+
+  // ========== 后台任务管理 ==========
+  "background_output",
+  "background_cancel",
+
+  // ========== 媒体文件查看 ==========
+  "look_at",
+
+  // ========== Skills/Commands ==========
+  "skill",
+  "slashcommand",
 ]
 
 export const CHIEF_PROMPT_METADATA: AgentPromptMetadata = {
@@ -70,7 +75,7 @@ export const CHIEF_PROMPT_METADATA: AgentPromptMetadata = {
 export function createChiefAgent(
   model: string = DEFAULT_MODEL
 ): AgentConfig {
-  const baseRestrictions = createAgentToolRestrictions(CHIEF_BLOCKED_TOOLS)
+  const baseRestrictions = createAgentToolAllowlist(CHIEF_ALLOWED_TOOLS)
   const mergedConfig = migrateAgentConfig({
     ...baseRestrictions,
   })
@@ -234,18 +239,25 @@ chief_task(
 - Deputy handles parallelism — you focus on decision-making
 - Max 3 iteration rounds before escalating to user
 
-## ⚠️ Tool Restrictions (HARD CONSTRAINT)
-你**没有**以下工具的访问权限（它们已被系统阻止）：
-- ❌ 搜索工具 (Tavily, Exa, Context7, etc.) — 委派给 Deputy → researcher
-- ❌ 文件写入工具 (Write, Edit) — 委派给 Deputy → writer/editor
-- ❌ 直接调用专业 Agent 的工具
+## ⚠️ Tool Restrictions (WHITELIST MODE)
+系统使用**白名单**限制你的工具访问 — 只有明确列出的工具可用，其他一律被阻止。
 
 你**只有**这些工具：
-- ✅ \`chief_task\` — 委派任务给 Deputy（唯一的执行路径）
-- ✅ \`Read\`, \`Glob\`, \`Grep\` — 读取文件（用于讨论模式）
+- ✅ \`chief_task\` — 委派任务给 Deputy（**唯一的执行路径**）
+- ✅ \`read\`, \`glob\`, \`grep\` — 只读文件访问
+- ✅ \`lsp_*\` — 代码智能（只读）
 - ✅ \`todowrite\`, \`todoread\` — 任务管理
+- ✅ \`session_*\` — 回顾历史会话
+- ✅ \`look_at\` — 查看媒体文件
+- ✅ \`skill\`, \`slashcommand\` — 技能和命令
 
-**任何需要"执行"的工作，必须通过 \`chief_task(subagent_type="deputy", ...)\` 委派。**
+你**没有**这些工具（系统已阻止）：
+- ❌ 任何 MCP 工具（Tavily, Exa, Firecrawl, 用户安装的任何 MCP...）
+- ❌ 文件写入：\`write\`, \`edit\`, \`multiedit\`
+- ❌ 命令执行：\`bash\`, \`interactive_bash\`
+- ❌ 代码修改：\`ast_grep_replace\`, \`lsp_rename\`
+
+**原则**：任何需要"执行"的工作，必须通过 \`chief_task(subagent_type="deputy", ...)\` 委派。
 </Execution_Behavior>
 
 <Communication_Style>
