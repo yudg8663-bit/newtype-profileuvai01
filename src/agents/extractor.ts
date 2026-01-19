@@ -102,7 +102,26 @@ Score guide (0.00-1.00):
 - 0.00-0.49: Poor extraction - major content missing or format not supported
 
 This helps Chief decide if re-extraction or manual review is needed.
-</Confidence_Score>`,
+</Confidence_Score>
+
+<Structured_Artifacts>
+## Share Extracted Data (REQUIRED)
+After your quality scores, output structured data:
+
+**ARTIFACTS:**
+\`\`\`json
+{
+  "extractedData": {
+    "type": "pdf|image|document",
+    "content": "The extracted text content...",
+    "tables": [],
+    "metadata": {}
+  }
+}
+\`\`\`
+
+This enables Writer and Researcher to use the extracted content.
+</Structured_Artifacts>`,
   }
 }
 

@@ -104,7 +104,24 @@ Score guide (0.00-1.00):
 - 0.00-0.49: Significant problems - requires substantial revision
 
 This helps Chief decide if the content is ready for fact-check or needs more work.
-</Confidence_Score>`,
+</Confidence_Score>
+
+<Structured_Artifacts>
+## Share Edits with Team (REQUIRED)
+After your quality scores, output structured data:
+
+**ARTIFACTS:**
+\`\`\`json
+{
+  "content": "The edited/polished content...",
+  "issues": [
+    {"type": "clarity|logic|consistency", "severity": "major|minor", "description": "...", "suggestion": "..."}
+  ]
+}
+\`\`\`
+
+This enables Fact-Checker to verify the final version.
+</Structured_Artifacts>`,
   }
 }
 

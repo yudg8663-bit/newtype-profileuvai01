@@ -295,4 +295,44 @@ describe("AGENT_DIMENSIONS", () => {
       }
     }
   })
+
+  test("should have good and bad examples for each dimension", () => {
+    for (const agentType of Object.keys(AGENT_DIMENSIONS)) {
+      const dims = AGENT_DIMENSIONS[agentType as keyof typeof AGENT_DIMENSIONS]
+      for (const dim of dims) {
+        expect(dim.goodExample).toBeDefined()
+        expect(dim.badExample).toBeDefined()
+        expect(dim.goodExample!.length).toBeGreaterThan(10)
+        expect(dim.badExample!.length).toBeGreaterThan(10)
+      }
+    }
+  })
+})
+
+describe("buildImprovementDirective with examples", () => {
+  test("should include good/bad examples in directive for weak dimension", () => {
+    // #given
+    const weakest = { name: "sources", label: "Sources", score: 0.55, weak: true }
+    const assessment = {
+      agentType: "researcher" as const,
+      dimensions: [
+        { name: "coverage", label: "Coverage", score: 0.85, weak: false },
+        weakest,
+        { name: "relevance", label: "Relevance", score: 0.90, weak: false },
+      ],
+      overall: 0.77,
+      weakest,
+      allPass: false,
+    }
+    
+    // #when
+    const result = buildImprovementDirective(assessment, "ses_123")
+    
+    // #then
+    expect(result).toContain("**EXAMPLES:**")
+    expect(result).toContain("✓ GOOD:")
+    expect(result).toContain("✗ BAD:")
+    expect(result).toContain("Official docs")
+    expect(result).toContain("random blogs")
+  })
 })

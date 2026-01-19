@@ -112,7 +112,24 @@ Score guide (0.00-1.00):
 - 0.00-0.49: Limited - minimal results or query too vague
 
 This helps Chief decide if more retrieval or external research is needed.
-</Confidence_Score>`,
+</Confidence_Score>
+
+<Structured_Artifacts>
+## Share Findings with Team (REQUIRED)
+After your quality scores, output structured data:
+
+**ARTIFACTS:**
+\`\`\`json
+{
+  "findings": [
+    {"claim": "Key insight from archive", "confidence": 0.85, "sourceRefs": ["file/path"]}
+  ],
+  "connections": ["Related topic A", "Related topic B"]
+}
+\`\`\`
+
+This enables Writer to build on existing materials and avoid duplication.
+</Structured_Artifacts>`,
   }
 }
 

@@ -17,8 +17,13 @@ bun test path/to.test.ts  # Run single test file
 
 ```
 src/
-├── agents/      # 7 agents: chief, researcher, fact-checker, archivist, extractor, writer, editor
+├── agents/      # 8 agents: chief, deputy, researcher, fact-checker, archivist, extractor, writer, editor
 ├── hooks/       # Lifecycle hooks (chief-orchestrator, comment-checker, etc.)
+│   └── chief-orchestrator/  # Main orchestration with quality scoring
+│       ├── confidence-router.ts      # Single-score routing (legacy)
+│       ├── quality-dimensions.ts     # Multi-dimensional scoring (v1.0.20+)
+│       ├── task-progress-tracker.ts  # Track delegated tasks
+│       └── output-summarizer.ts      # Summarize agent outputs
 ├── tools/       # LSP, AST-Grep, Grep, Glob, chief-task, skill
 ├── features/    # Background agents, skill loaders, context injector
 ├── auth/        # Google Antigravity OAuth
@@ -27,17 +32,20 @@ src/
 └── index.ts     # Main plugin entry
 ```
 
-## AGENT TEAM
+## AGENT TEAM & QUALITY DIMENSIONS
 
-| Agent | Model | Role |
-|-------|-------|------|
-| **chief** | Claude Opus 4.5 | Editor-in-Chief: thought partner + coordinator |
-| **researcher** | Gemini 3 Pro High | External research, trends |
-| **fact-checker** | Gemini 3 Pro High | Validate sources, credibility |
-| **archivist** | Claude Sonnet 4.5 | Knowledge base retrieval |
-| **extractor** | Gemini 3 Flash | PDF/image/document extraction |
-| **writer** | Gemini 3 Pro High | Content production |
-| **editor** | Claude Sonnet 4.5 | Content refinement |
+| Agent | Model | Quality Dimensions |
+|-------|-------|-------------------|
+| **chief** | Claude Opus 4.5 | N/A (orchestrator) |
+| **deputy** | Claude Sonnet 4.5 | Executes delegated tasks |
+| **researcher** | Gemini 3 Pro High | Coverage, Sources, Relevance |
+| **fact-checker** | Gemini 3 Pro High | Accuracy, Authority, Completeness |
+| **archivist** | Claude Sonnet 4.5 | Coverage, Connections, Relevance |
+| **extractor** | Gemini 3 Flash | Accuracy, Completeness, Format |
+| **writer** | Gemini 3 Pro High | Structure, Clarity, Grounding |
+| **editor** | Claude Sonnet 4.5 | Polish, Logic, Consistency |
+
+Each agent outputs multi-dimensional scores. Chief uses WEAKEST dimension to provide targeted feedback.
 
 ## CODE STYLE
 
@@ -50,30 +58,14 @@ import { log } from "../../shared/logger"
 import type { AgentConfig } from "./types"
 ```
 
-### Types
-```typescript
-// Use bun-types (NOT @types/node) - configured in tsconfig.json
-// Prefer explicit types, use type imports for type-only
-import type { PluginInput } from "@opencode-ai/plugin"
-export function createAgent(model: string = DEFAULT_MODEL): AgentConfig { }
-```
-
 ### Naming
 | Element | Convention | Example |
 |---------|------------|---------|
-| Directories/Files | kebab-case | `chief-orchestrator/`, `output-summarizer.ts` |
+| Directories/Files | kebab-case | `chief-orchestrator/`, `quality-dimensions.ts` |
 | Hook creators | `createXXXHook` | `createChiefOrchestratorHook()` |
 | Agent factories | `createXXXAgent` | `createChiefAgent()` |
 | Constants | UPPER_SNAKE | `DEFAULT_MODEL`, `HOOK_NAME` |
-| Types | PascalCase | `AgentConfig`, `TaskProgress` |
-
-### Exports
-```typescript
-// Barrel exports in index.ts
-export * from "./types"
-export { createBuiltinAgents } from "./utils"
-export const builtinAgents: Record<string, AgentConfig> = { ... }
-```
+| Types | PascalCase | `AgentConfig`, `QualityScores` |
 
 ### Error Handling
 ```typescript
@@ -93,48 +85,49 @@ Test files: `*.test.ts` alongside source. BDD comments: `#given`, `#when`, `#the
 ```typescript
 import { describe, test, expect } from "bun:test"
 
-describe("TaskProgressTracker", () => {
-  test("should track progress", () => {
+describe("QualityDimensions", () => {
+  test("should parse multi-dimensional scores", () => {
     // #given
-    const tracker = createTaskProgressTracker()
+    const output = "**QUALITY SCORES:**\n- Coverage: 0.85\n- Sources: 0.55\n**OVERALL: 0.70**"
     // #when
-    tracker.startTask("task-1", "Test")
+    const result = parseQualityScores(output, "researcher")
     // #then
-    expect(tracker.getStatus("task-1")).toBe("running")
+    expect(result.overall).toBe(0.70)
+    expect(result.weakest?.name).toBe("sources")
   })
 })
 ```
 
-## ADDING COMPONENTS
+## QUALITY SCORING SYSTEM (v1.0.20+)
 
-### Add an Agent
-1. Create `src/agents/my-agent.ts`:
-```typescript
-import type { AgentConfig } from "@opencode-ai/sdk"
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
-
-export function createMyAgent(model: string = DEFAULT_MODEL): AgentConfig {
-  return { model, temperature: 0.3, description: "...", prompt: `...` }
-}
-export const myAgent = createMyAgent()
+### Agent Output Format
+```markdown
+**QUALITY SCORES:**
+- Coverage: 0.85
+- Sources: 0.55
+- Relevance: 0.90
+**OVERALL: 0.70**
+**WEAKEST: Sources** (only if any < 0.70)
 ```
-2. Add to `builtinAgents` in `src/agents/index.ts`
-3. Update `BuiltinAgentName` type in `src/agents/types.ts`
 
-### Add a Hook
-1. Create `src/hooks/my-hook/index.ts`:
-```typescript
-import type { PluginInput } from "@opencode-ai/plugin"
-export const HOOK_NAME = "my-hook"
+### Routing Logic
+| Overall Score | Action |
+|--------------|--------|
+| ≥ 0.80 | Pass to Chief |
+| 0.50-0.79 | Polish (same agent) |
+| < 0.50 | Rewrite (max 2 attempts, then escalate) |
 
-export function createMyHook(ctx: PluginInput) {
-  return {
-    onSessionStart: async () => { /* ... */ },
-    onPostToolUse: async (props) => { /* ... */ },
+### Per-Agent Thresholds (configurable)
+```json
+{
+  "confidence": {
+    "default": { "pass": 0.8, "polish": 0.5 },
+    "by_agent": {
+      "fact-checker": { "pass": 0.9 }
+    }
   }
 }
 ```
-2. Export from `src/hooks/index.ts`
 
 ## ANTI-PATTERNS
 
@@ -144,21 +137,19 @@ export function createMyHook(ctx: PluginInput) {
 | `@types/node` | `bun-types` |
 | `as any`, `@ts-ignore` | Proper typing |
 | Empty `catch {}` | Log and handle errors |
-| bash file ops in code | Node/Bun fs APIs |
-| Direct `bun publish` | GitHub Actions workflow |
-| `Bun.spawn` / `import { spawn } from "bun"` | `node:child_process` (see below) |
+| `Bun.spawn` | `node:child_process` |
+| Direct `npm publish` | `npm version patch && npm publish` |
 
 ## RUNTIME COMPATIBILITY (CRITICAL)
 
-**OpenCode loads plugins using a runtime that may not support all Bun-specific APIs.**
+**OpenCode loads plugins using a runtime that may not support Bun-specific APIs.**
 
 ### DO NOT USE:
 ```typescript
-// ❌ WRONG - causes white screen / plugin load failure
+// ❌ WRONG - causes plugin load failure
 import { spawn } from "bun"
 Bun.spawn([...])
 Bun.write(path, data)
-globalThis.Bun.anything
 ```
 
 ### USE INSTEAD:
@@ -166,25 +157,8 @@ globalThis.Bun.anything
 // ✅ CORRECT - works in both Bun and Node.js
 import { spawn } from "node:child_process"
 import { writeFile } from "node:fs/promises"
-
-// Or use the shared utility:
-import { spawnAsync, writeFileSafe } from "../../shared/spawn"
+import { spawnAsync } from "../../shared/spawn"
 ```
-
-### Why this matters:
-- Build uses `--target bun` which is required for proper bundling
-- But OpenCode's runtime may have `globalThis.Bun === undefined`
-- Node.js APIs work in both environments (Bun has Node.js compatibility layer)
-
-### Affected files (v1.0.19 fix):
-- `src/shared/spawn.ts` - New cross-runtime spawn utilities
-- `src/tools/interactive-bash/` - tmux execution
-- `src/hooks/interactive-bash-session/` - session cleanup
-- `src/hooks/comment-checker/` - CLI execution, binary download
-- `src/tools/ast-grep/` - CLI execution, binary download  
-- `src/tools/lsp/client.ts` - LSP server process management
-- `src/tools/glob/cli.ts` - ripgrep/find execution
-- `src/tools/grep/` - ripgrep execution, binary download
 
 ## CONFIGURATION
 
@@ -197,14 +171,17 @@ import { spawnAsync, writeFileSafe } from "../../shared/spawn"
   "agents": {
     "chief": { "model": "google/antigravity-claude-opus-4-5-thinking-high" },
     "writer": { "model": "google/antigravity-gemini-3-pro-high", "temperature": 0.7 }
+  },
+  "confidence": {
+    "default": { "pass": 0.8, "polish": 0.5 },
+    "max_rewrite_attempts": 2
   }
 }
 ```
 
 ## DEPLOYMENT
 
-**GitHub Actions only** - Never publish locally, never modify package.json version.
-
 ```bash
-gh workflow run publish -f bump=patch
+npm version patch   # Bump version
+npm publish --access public
 ```

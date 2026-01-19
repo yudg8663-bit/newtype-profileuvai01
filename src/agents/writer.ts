@@ -97,7 +97,21 @@ Score guide (0.00-1.00):
 - 0.00-0.49: Incomplete - fundamental issues requiring major revision
 
 This helps Chief decide if the draft needs revision before sending to Editor.
-</Confidence_Score>`,
+</Confidence_Score>
+
+<Structured_Artifacts>
+## Share Draft with Team (REQUIRED)
+After your quality scores, output the draft content for other agents:
+
+**ARTIFACTS:**
+\`\`\`json
+{
+  "content": "The full draft text goes here..."
+}
+\`\`\`
+
+This enables Editor to refine your work and Fact-Checker to verify claims.
+</Structured_Artifacts>`,
   }
 }
 

@@ -7,15 +7,13 @@
 
 export type AgentType = "fact-checker" | "researcher" | "writer" | "editor" | "archivist" | "extractor"
 
-/**
- * Dimension definitions for each agent type
- */
 export interface DimensionDefinition {
   name: string
   label: string
   description: string
-  /** Improvement suggestions when this dimension is weak */
   improvementHints: string[]
+  goodExample?: string
+  badExample?: string
 }
 
 export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
@@ -29,6 +27,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Explore related subtopics that were missed",
         "Look for recent developments and updates",
       ],
+      goodExample: "Covered market trends, competitor analysis, regulatory changes, AND emerging technologies",
+      badExample: "Only found 2 blog posts on the main topic, missed industry reports",
     },
     {
       name: "sources",
@@ -39,6 +39,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Cross-reference claims with official documentation",
         "Replace secondary sources with original publications",
       ],
+      goodExample: "Official docs (60%), peer-reviewed (20%), expert blogs (20%)",
+      badExample: "All sources from random blogs and forums with no verification",
     },
     {
       name: "relevance",
@@ -49,6 +51,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Filter out tangential information",
         "Focus on directly applicable findings",
       ],
+      goodExample: "Every finding directly answers or supports the research question",
+      badExample: "Included tangential history lesson when asked about current state",
     },
   ],
 
@@ -62,6 +66,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Find additional confirming sources",
         "Check for more recent data that may contradict",
       ],
+      goodExample: "All 8 claims verified with 2+ independent sources, 0 false claims found",
+      badExample: "3 claims marked 'unverifiable', 1 claim actually false but marked true",
     },
     {
       name: "authority",
@@ -72,6 +78,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Replace news reports with original studies",
         "Verify through domain experts or institutions",
       ],
+      goodExample: "Verified via SEC filings, peer-reviewed journals, official company statements",
+      badExample: "Verified only via Wikipedia and a 3-year-old news article",
     },
     {
       name: "completeness",
@@ -82,6 +90,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Check implicit claims and assumptions",
         "Verify quoted statistics and numbers",
       ],
+      goodExample: "Checked all 12 factual claims including statistics and quoted figures",
+      badExample: "Only checked 3 of 12 claims, skipped all the numbers",
     },
   ],
 
@@ -95,6 +105,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Add missing transitions between ideas",
         "Ensure logical progression of arguments",
       ],
+      goodExample: "Clear intro → context → analysis → implications → conclusion, with smooth transitions",
+      badExample: "Jumps from conclusion back to intro, no section headers, random order",
     },
     {
       name: "clarity",
@@ -105,6 +117,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Define technical terms on first use",
         "Break down dense paragraphs",
       ],
+      goodExample: "Technical concepts explained simply, one idea per paragraph, no jargon without definition",
+      badExample: "50-word sentences with nested clauses, undefined acronyms, wall-of-text paragraphs",
     },
     {
       name: "grounding",
@@ -115,6 +129,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Link assertions to provided research",
         "Remove or flag unsubstantiated statements",
       ],
+      goodExample: "Every claim cites source from research: 'According to [source], ...'",
+      badExample: "Makes bold claims like 'Everyone knows that...' with no citation",
     },
   ],
 
@@ -128,6 +144,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Improve sentence rhythm and flow",
         "Eliminate redundancy",
       ],
+      goodExample: "'The company grew rapidly' not 'The company experienced a rapid rate of growth'",
+      badExample: "Redundant phrases, passive voice overuse, clichés ('at the end of the day')",
     },
     {
       name: "logic",
@@ -138,6 +156,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Strengthen weak arguments",
         "Ensure conclusions follow from premises",
       ],
+      goodExample: "If A then B, A is true, therefore B. Clear cause-effect chain.",
+      badExample: "Conclusion doesn't follow: 'Sales rose 10%, so we should enter new market'",
     },
     {
       name: "consistency",
@@ -148,6 +168,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Align tone across sections",
         "Fix formatting inconsistencies",
       ],
+      goodExample: "Same term throughout: 'users' not 'users/customers/clients' interchangeably",
+      badExample: "Formal intro, casual middle, academic conclusion. 'AI' vs 'artificial intelligence' mixed",
     },
   ],
 
@@ -161,6 +183,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Search in different folders or categories",
         "Look for related or linked documents",
       ],
+      goodExample: "Found 15 relevant docs across 4 folders including 3 the user didn't know existed",
+      badExample: "Only found 2 docs in the obvious location, missed the archive folder",
     },
     {
       name: "connections",
@@ -171,6 +195,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Look for contradictions or confirmations",
         "Identify gaps in the knowledge base",
       ],
+      goodExample: "Doc A contradicts Doc B on pricing; Doc C cites same study as Doc D",
+      badExample: "Listed docs as isolated items, no cross-referencing or pattern analysis",
     },
     {
       name: "relevance",
@@ -181,6 +207,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Prioritize most directly relevant materials",
         "Explain why each item was selected",
       ],
+      goodExample: "Each doc clearly mapped to query: 'Doc X answers your Q about pricing...'",
+      badExample: "Returned every doc mentioning the keyword, most were irrelevant",
     },
   ],
 
@@ -194,6 +222,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Verify numbers and special characters",
         "Cross-check against original visually",
       ],
+      goodExample: "All text matches original, numbers verified, special chars (€, ™) preserved",
+      badExample: "OCR errors: 'rn' → 'm', '$1,000' → '$l,OOO', ligatures broken",
     },
     {
       name: "completeness",
@@ -204,6 +234,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Extract content from images/charts",
         "Include footnotes and sidebars",
       ],
+      goodExample: "All 12 pages extracted including footnotes, appendix, and figure captions",
+      badExample: "Missing pages 5-7, skipped all charts and tables, no footnotes",
     },
     {
       name: "format",
@@ -214,6 +246,8 @@ export const AGENT_DIMENSIONS: Record<AgentType, DimensionDefinition[]> = {
         "Preserve heading hierarchy",
         "Maintain list formatting",
       ],
+      goodExample: "Tables rendered as markdown tables, H1/H2/H3 preserved, lists formatted",
+      badExample: "Table data as plain text run together, all headings same size, lists lost",
     },
   ],
 }
@@ -356,12 +390,21 @@ Action: ${getPassAction(agentType)}`
   const dimDef = AGENT_DIMENSIONS[agentType].find(d => d.name === weakDim.name)
   const hints = dimDef?.improvementHints ?? []
   
+  const exampleSection = dimDef?.goodExample && dimDef?.badExample
+    ? `
+
+**EXAMPLES:**
+✓ GOOD: ${dimDef.goodExample}
+✗ BAD: ${dimDef.badExample}`
+    : ""
+  
   return `[${label}: NEEDS ${recommendation}]
 Quality Scores:
 ${dimLines}
 Overall: ${(overall * 100).toFixed(0)}%
 
 **PROBLEM:** ${weakDim.label} is below threshold (${weakDim.score.toFixed(2)} < 0.70)
+${exampleSection}
 
 **FOCUS ON:**
 ${hints.slice(0, 2).map(h => `• ${h}`).join("\n")}

@@ -16,6 +16,14 @@ import { getTrackerForSession, clearTrackerForSession } from "./task-progress-tr
 import { analyzeAgentOutput, hasConfidenceScore, detectAgentType, clearRewriteAttempts } from "./confidence-router"
 import { parseQualityScores, buildImprovementDirective, hasQualityScores } from "./quality-dimensions"
 import type { AgentType } from "./quality-dimensions"
+import {
+  parseArtifacts,
+  addArtifact,
+  buildContextSummary,
+  hasArtifacts,
+  clearContext,
+  type AgentType as SharedAgentType,
+} from "./shared-context"
 
 export const HOOK_NAME = "chief-orchestrator"
 
@@ -539,6 +547,7 @@ export function createChiefOrchestratorHook(
           sessions.delete(sessionInfo.id)
           clearTrackerForSession(sessionInfo.id)
           clearRewriteAttempts(sessionInfo.id)
+          clearContext(sessionInfo.id)
           log(`[${HOOK_NAME}] Session deleted: cleaned up`, { sessionID: sessionInfo.id })
         }
         return
@@ -580,11 +589,22 @@ export function createChiefOrchestratorHook(
         return
       }
 
-      // Check chief_task - inject single-task directive and track task
       if (input.tool === "chief_task") {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes("[SYSTEM DIRECTIVE - SINGLE TASK ONLY]")) {
-          output.args.prompt = prompt + `\n<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>`
+          let enhancedPrompt = prompt
+          
+          if (input.sessionID) {
+            const sharedContext = buildContextSummary(input.sessionID)
+            if (sharedContext) {
+              enhancedPrompt = `${sharedContext}\n\n${enhancedPrompt}`
+              log(`[${HOOK_NAME}] Injected shared context to chief_task`, {
+                sessionID: input.sessionID,
+              })
+            }
+          }
+          
+          output.args.prompt = enhancedPrompt + `\n<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>`
           log(`[${HOOK_NAME}] Injected single-task directive to chief_task`, {
             sessionID: input.sessionID,
           })
@@ -707,6 +727,23 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
 
           let confidenceDirective = ""
           const agentType = detectAgentType(output.output, category) as AgentType | null
+          
+          if (input.sessionID && agentType && hasArtifacts(output.output)) {
+            const tracker = getTrackerForSession(input.sessionID)
+            const tasks = tracker.getProgress()
+            const currentTask = input.callID ? tasks.find(t => t.id === input.callID) : tasks[tasks.length - 1]
+            const taskDescription = currentTask?.description ?? "Unknown task"
+            
+            const artifact = parseArtifacts(output.output, agentType as SharedAgentType, taskDescription)
+            if (artifact) {
+              const artifactId = addArtifact(input.sessionID, artifact)
+              log(`[${HOOK_NAME}] Artifact stored`, {
+                sessionID: input.sessionID,
+                artifactId,
+                agentType,
+              })
+            }
+          }
           
           if (agentType && hasQualityScores(output.output)) {
             const qualityAssessment = parseQualityScores(output.output, agentType)

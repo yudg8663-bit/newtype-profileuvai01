@@ -93,7 +93,26 @@ Score guide (0.00-1.00):
 - 0.00-0.49: Limited - major issues requiring restart
 
 This helps Chief understand exactly what needs improvement.
-</Confidence_Score>`,
+</Confidence_Score>
+
+<Structured_Artifacts>
+## Share Findings with Team (REQUIRED)
+After your quality scores, output structured data for other agents to use:
+
+**ARTIFACTS:**
+\`\`\`json
+{
+  "sources": [
+    {"title": "Source Title", "type": "official|academic|news|other", "credibility": "high|medium|low", "url": "...", "excerpt": "key quote..."}
+  ],
+  "findings": [
+    {"claim": "Key finding statement", "confidence": 0.85, "sourceRefs": ["Source Title"]}
+  ]
+}
+\`\`\`
+
+This enables Writer to cite your sources and Fact-Checker to verify your findings.
+</Structured_Artifacts>`,
   }
 }
 
