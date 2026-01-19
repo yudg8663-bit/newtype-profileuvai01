@@ -1,7 +1,50 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
+import {
+  createAgentToolRestrictions,
+  migrateAgentConfig,
+} from "../shared/permission-compat"
 
 const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
+
+/**
+ * Chief 被阻止使用的工具 — 强制通过 Deputy 委派执行任务
+ *
+ * 这是三层架构的关键硬约束：
+ * - Chief (思考者) 只负责规划、决策、审核
+ * - Deputy (执行者) 负责调度专业 Agents
+ * - 专业 Agents 负责实际执行
+ *
+ * 阻止 Chief 直接使用执行类工具，迫使它必须委派给 Deputy
+ */
+const CHIEF_BLOCKED_TOOLS = [
+  // MCP 搜索工具 — 应该委派给 researcher
+  "tavily_search",
+  "tavily_extract",
+  "tavily_get_search_context",
+  "tavily_qna_search",
+  "firecrawl_scrape",
+  "firecrawl_map",
+  "firecrawl_crawl",
+  "firecrawl_check_crawl_status",
+  "websearch_web_search_exa",
+  "context7_resolve-library-id",
+  "context7_query-docs",
+  "context7_get-library-docs",
+  "grep_app_searchgithub",
+
+  // 文件写入工具 — 应该委派给 writer/editor
+  "Write",
+  "write",
+  "Edit",
+  "edit",
+  "MultiEdit",
+  "multiedit",
+
+  // 旧的委派工具 — 已废弃，统一用 chief_task
+  "task",
+  "call_omo_agent",
+]
 
 export const CHIEF_PROMPT_METADATA: AgentPromptMetadata = {
   category: "advisor",
@@ -22,13 +65,12 @@ export const CHIEF_PROMPT_METADATA: AgentPromptMetadata = {
 export function createChiefAgent(
   model: string = DEFAULT_MODEL
 ): AgentConfig {
-  return {
-    description:
-      "Chief - thought partner for exploration, coordinator for execution. Opinionated, direct, challenges flawed thinking.",
-    mode: "primary" as const,
-    model,
-    temperature: 0.3,
-    prompt: `<Role>
+  const baseRestrictions = createAgentToolRestrictions(CHIEF_BLOCKED_TOOLS)
+  const mergedConfig = migrateAgentConfig({
+    ...baseRestrictions,
+  })
+
+  const prompt = `<Role>
 You are "Chief" — a thought partner who happens to have a team.
 
 **Mode 1 - Thought Partner**: When users want to explore ideas, you think WITH them. You have your own opinions. You challenge flawed logic directly. You're not a facilitator — you're a sparring partner.
@@ -186,6 +228,19 @@ chief_task(
 - NEVER skip fact-checking for factual claims
 - Deputy handles parallelism — you focus on decision-making
 - Max 3 iteration rounds before escalating to user
+
+## ⚠️ Tool Restrictions (HARD CONSTRAINT)
+你**没有**以下工具的访问权限（它们已被系统阻止）：
+- ❌ 搜索工具 (Tavily, Exa, Context7, etc.) — 委派给 Deputy → researcher
+- ❌ 文件写入工具 (Write, Edit) — 委派给 Deputy → writer/editor
+- ❌ 直接调用专业 Agent 的工具
+
+你**只有**这些工具：
+- ✅ \`chief_task\` — 委派任务给 Deputy（唯一的执行路径）
+- ✅ \`Read\`, \`Glob\`, \`Grep\` — 读取文件（用于讨论模式）
+- ✅ \`todowrite\`, \`todoread\` — 任务管理
+
+**任何需要"执行"的工作，必须通过 \`chief_task(subagent_type="deputy", ...)\` 委派。**
 </Execution_Behavior>
 
 <Communication_Style>
@@ -226,7 +281,16 @@ When analyzing problems:
 - Structured, reusable — not scattered information
 - Explain the WHY, not just the HOW
 - State limitations and boundaries clearly
-</Information_Standards>`,
+</Information_Standards>`
+
+  return {
+    description:
+      "Chief - thought partner for exploration, coordinator for execution. Opinionated, direct, challenges flawed thinking.",
+    mode: "primary" as const,
+    model,
+    temperature: 0.3,
+    prompt,
+    ...mergedConfig,
   }
 }
 
