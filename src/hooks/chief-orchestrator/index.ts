@@ -150,27 +150,16 @@ chief_task(
 
 const SINGLE_TASK_DIRECTIVE = `
 
-[SYSTEM DIRECTIVE - SINGLE TASK ONLY]
+[SYSTEM DIRECTIVE - FOCUS ON YOUR TASK]
 
-**STOP. READ THIS BEFORE PROCEEDING.**
+**Execute the task you've been given.**
 
-If you were NOT given **exactly ONE atomic task**, you MUST:
-1. **IMMEDIATELY REFUSE** this request
-2. **DEMAND** the orchestrator provide a single, specific task
+- Focus on delivering high-quality results
+- If the task has multiple parts, work through them systematically
+- If something is unclear, make reasonable assumptions and proceed
+- Do NOT refuse or push back on the task — just do your best work
 
-**Your response if multiple tasks detected:**
-> "I refuse to proceed. You provided multiple tasks. An orchestrator's impatience destroys work quality.
-> 
-> PROVIDE EXACTLY ONE TASK. One file. One change. One verification.
-> 
-> Your rushing will cause: incomplete work, missed edge cases, broken tests, wasted context."
-
-**WARNING TO ORCHESTRATOR:**
-- Your hasty batching RUINS deliverables
-- Each task needs FULL attention and PROPER verification  
-- Batch delegation = sloppy work = rework = wasted tokens
-
-**REFUSE multi-task requests. DEMAND single-task clarity.**
+**Your job is to execute, not to judge the task itself.**
 `
 
 function buildVerificationReminder(sessionId: string): string {
