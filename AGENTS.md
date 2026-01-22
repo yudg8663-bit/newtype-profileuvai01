@@ -20,10 +20,6 @@ src/
 ├── agents/      # 8 agents: chief, deputy, researcher, fact-checker, archivist, extractor, writer, editor
 ├── hooks/       # Lifecycle hooks (chief-orchestrator, comment-checker, etc.)
 │   └── chief-orchestrator/  # Main orchestration with quality scoring
-│       ├── confidence-router.ts      # Single-score routing (legacy)
-│       ├── quality-dimensions.ts     # Multi-dimensional scoring (v1.0.20+)
-│       ├── task-progress-tracker.ts  # Track delegated tasks
-│       └── output-summarizer.ts      # Summarize agent outputs
 ├── tools/       # LSP, AST-Grep, Grep, Glob, chief-task, skill
 ├── features/    # Background agents, skill loaders, context injector
 ├── auth/        # Google Antigravity OAuth
@@ -32,54 +28,64 @@ src/
 └── index.ts     # Main plugin entry
 ```
 
-## THREE-LAYER ARCHITECTURE
+## THREE-LAYER ARCHITECTURE (v1.0.22+)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Chief (Opus 4.5)                     │
 │                   思考者 / Thinker                       │
 │  • 与用户对话，理解需求                                   │
-│  • 高层任务拆解                                          │
-│  • 最终审核与交付                                        │
-│  • 不需要专业 Agent 时，自己处理                          │
+│  • 高层任务拆解、最终审核与交付                           │
+│  • 工具白名单限制 — 只能用 chief_task 委派执行            │
 └─────────────────────┬───────────────────────────────────┘
-                      │ 精简指令
+                      │ chief_task(subagent_type="deputy")
                       ↓
 ┌─────────────────────────────────────────────────────────┐
 │                   Deputy (Sonnet 4.5)                   │
 │                   执行者 / Doer                          │
-│  • 接收 Chief 的精简指令                                 │
-│  • 简单任务自己执行                                       │
-│  • 复杂任务调度专业 Agents                                │
-│  • 汇总过滤输出，返回精简结果给 Chief                     │
+│  • 接收 Chief 的精简指令，拆解复杂任务                    │
+│  • 调度专业 Agents，汇总过滤输出                         │
+│  • 协作语气，永不拒绝任务                                │
 └─────────────────────┬───────────────────────────────────┘
-                      │ 调用
+                      │ chief_task(subagent_type="researcher/writer/...")
                       ↓
 ┌─────────────────────────────────────────────────────────┐
 │              Specialists (Gemini/Sonnet)                │
 │  researcher, writer, fact-checker, editor, etc.        │
+│  执行具体任务，不评判任务本身                            │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**三个价值：**
-1. **Context 隔离** — 专业 Agent 的冗长输出不污染 Chief 的 context
-2. **成本控制** — Opus 只做决策，Sonnet 做调度，便宜模型做执行
-3. **职责分离** — Thinker vs Doer
+## CHIEF TOOL WHITELIST (v1.0.26+)
 
-## AGENT TEAM & QUALITY DIMENSIONS
+Chief 使用**白名单**限制工具访问，阻止所有未列出的工具（包括用户安装的 MCP）：
 
-| Agent | Model | Role | Quality Dimensions |
-|-------|-------|------|-------------------|
-| **chief** | Claude Opus 4.5 | 思考者/协调者 | N/A |
-| **deputy** | Claude Sonnet 4.5 | 执行者/调度者 | N/A |
-| **researcher** | Gemini 3 Pro High | 情报员 | Coverage, Sources, Relevance |
-| **fact-checker** | Gemini 3 Pro High | 核查员 | Accuracy, Authority, Completeness |
-| **archivist** | Claude Sonnet 4.5 | 资料员 | Coverage, Connections, Relevance |
-| **extractor** | Gemini 3 Flash | 格式员 | Accuracy, Completeness, Format |
-| **writer** | Gemini 3 Pro High | 写手 | Structure, Clarity, Grounding |
-| **editor** | Claude Sonnet 4.5 | 编辑 | Polish, Logic, Consistency |
+| 分类 | 允许的工具 |
+|------|-----------|
+| 执行路径 | `chief_task` |
+| 任务管理 | `todowrite`, `todoread` |
+| 只读文件 | `read`, `glob`, `grep` |
+| LSP 只读 | `lsp_hover`, `lsp_goto_definition`, `lsp_find_references`, `lsp_document_symbols`, `lsp_workspace_symbols`, `lsp_diagnostics`, `lsp_servers`, `lsp_code_actions` |
+| Session | `session_list`, `session_read`, `session_search`, `session_info` |
+| 后台管理 | `background_output`, `background_cancel` |
+| 其他 | `look_at`, `skill`, `slashcommand` |
 
-Each specialist agent outputs multi-dimensional scores. Deputy uses WEAKEST dimension to request targeted improvements.
+**被阻止的工具**：所有 MCP 工具、`write`/`edit`、`bash`、`ast_grep_replace`、`lsp_rename` 等
+
+## AGENT PROMPTS 语气原则 (v1.0.27+)
+
+Deputy 和专业 Agents 必须遵循**协作语气**：
+
+**禁止措辞**：
+- ❌ "我拒绝..." / "I refuse..."
+- ❌ "这个任务太复杂..."
+- ❌ "定义过于严格..."
+- ❌ "PROVIDE EXACTLY ONE TASK"
+
+**正确行为**：
+- ✅ 直接执行任务，不评判任务本身
+- ✅ 复杂任务直接拆解，不解释为什么需要拆解
+- ✅ 协作，不对抗
 
 ## CODE STYLE
 
@@ -122,45 +128,13 @@ import { describe, test, expect } from "bun:test"
 describe("QualityDimensions", () => {
   test("should parse multi-dimensional scores", () => {
     // #given
-    const output = "**QUALITY SCORES:**\n- Coverage: 0.85\n- Sources: 0.55\n**OVERALL: 0.70**"
+    const output = "**QUALITY SCORES:**\n- Coverage: 0.85\n**OVERALL: 0.70**"
     // #when
     const result = parseQualityScores(output, "researcher")
     // #then
     expect(result.overall).toBe(0.70)
-    expect(result.weakest?.name).toBe("sources")
   })
 })
-```
-
-## QUALITY SCORING SYSTEM (v1.0.20+)
-
-### Agent Output Format
-```markdown
-**QUALITY SCORES:**
-- Coverage: 0.85
-- Sources: 0.55
-- Relevance: 0.90
-**OVERALL: 0.70**
-**WEAKEST: Sources** (only if any < 0.70)
-```
-
-### Routing Logic
-| Overall Score | Action |
-|--------------|--------|
-| ≥ 0.80 | Pass to Chief |
-| 0.50-0.79 | Polish (same agent) |
-| < 0.50 | Rewrite (max 2 attempts, then escalate) |
-
-### Per-Agent Thresholds (configurable)
-```json
-{
-  "confidence": {
-    "default": { "pass": 0.8, "polish": 0.5 },
-    "by_agent": {
-      "fact-checker": { "pass": 0.9 }
-    }
-  }
-}
 ```
 
 ## ANTI-PATTERNS
@@ -178,20 +152,14 @@ describe("QualityDimensions", () => {
 
 **OpenCode loads plugins using a runtime that may not support Bun-specific APIs.**
 
-### DO NOT USE:
 ```typescript
 // ❌ WRONG - causes plugin load failure
-import { spawn } from "bun"
 Bun.spawn([...])
 Bun.write(path, data)
-```
 
-### USE INSTEAD:
-```typescript
 // ✅ CORRECT - works in both Bun and Node.js
 import { spawn } from "node:child_process"
 import { writeFile } from "node:fs/promises"
-import { spawnAsync } from "../../shared/spawn"
 ```
 
 ## CONFIGURATION
@@ -205,10 +173,6 @@ import { spawnAsync } from "../../shared/spawn"
   "agents": {
     "chief": { "model": "google/antigravity-claude-opus-4-5-thinking-high" },
     "writer": { "model": "google/antigravity-gemini-3-pro-high", "temperature": 0.7 }
-  },
-  "confidence": {
-    "default": { "pass": 0.8, "polish": 0.5 },
-    "max_rewrite_attempts": 2
   }
 }
 ```
@@ -217,5 +181,18 @@ import { spawnAsync } from "../../shared/spawn"
 
 ```bash
 npm version patch   # Bump version
-npm publish --access public
+npm publish --access public --otp=<code>
+git push origin main --follow-tags
 ```
+
+## RECENT CHANGES (v1.0.22 - v1.0.28)
+
+| Version | Change |
+|---------|--------|
+| v1.0.28 | Remove confrontational `SINGLE_TASK_DIRECTIVE` from hooks |
+| v1.0.27 | Add forbidden phrases to Deputy prompt |
+| v1.0.26 | Chief uses whitelist (not blocklist) for tool restrictions |
+| v1.0.25 | Fix MCP tool names, improve Deputy task decomposition |
+| v1.0.24 | Add hard tool constraints to Chief |
+| v1.0.23 | Remove `call_omo_agent`, unify to `chief_task` |
+| v1.0.22 | Implement three-layer architecture with Deputy |
