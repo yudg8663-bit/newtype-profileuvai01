@@ -122,27 +122,40 @@ opencode auth login
 opencode
 ```
 
-### Invoke Agents
-
-The Chief (editor-in-chief) will automatically coordinate team work. You can also specify agents directly:
+### Three-Layer Architecture
 
 ```
-# Have the researcher investigate a topic
-@researcher Research the trends in AI development for 2024
+User ↔ Chief (Editor-in-Chief)
+           ↓ chief_task
+       Deputy (Deputy Editor)
+           ↓ chief_task
+       Specialist Agents (researcher, writer, editor...)
+```
 
-# Have the fact-checker verify information
-@fact-checker Verify the source of this claim
+**You only interact with Chief**. Chief automatically coordinates the team:
 
-# Have the writer draft an article
-@writer Write an overview based on these materials
+- **Mode 1 - Thought Partner**: When exploring ideas, Chief thinks WITH you, challenges flawed logic, and sparring.
+- **Mode 2 - Execution Coordinator**: When you have clear deliverables, Chief decomposes, delegates, and delivers.
 
-# Have the editor polish the content
-@editor Help me refine this paragraph
+### Example Conversations
+
+```
+# Research request - Chief delegates to researcher via Deputy
+"Help me understand the AI development trends in 2024"
+
+# Writing request - Chief coordinates writer → editor pipeline
+"Write an article about this topic based on our research"
+
+# Fact-checking request - Chief dispatches fact-checker
+"Verify the sources in this document"
+
+# Complex task - Chief orchestrates multiple agents
+"Create a comprehensive report on [topic] with verified sources"
 ```
 
 ### Task Categories
 
-Use `chief_task` tool to delegate tasks by category:
+Chief uses `chief_task` to delegate tasks by category:
 
 | Category | Purpose | Model Configuration |
 |----------|---------|---------------------|

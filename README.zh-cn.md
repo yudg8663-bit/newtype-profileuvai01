@@ -122,27 +122,40 @@ opencode auth login
 opencode
 ```
 
-### 调用 Agent
-
-主编 (chief) 会自动协调团队工作。你也可以直接指定 Agent：
+### 三层架构
 
 ```
-# 让情报员调研一个话题
-@researcher 调研一下2024年AI发展趋势
+用户 ↔ Chief (主编)
+           ↓ chief_task
+       Deputy (副主编)
+           ↓ chief_task
+       专业 Agent (researcher, writer, editor...)
+```
 
-# 让核查员验证信息
-@fact-checker 核实这个说法的来源
+**你只需要与 Chief 对话**。Chief 会自动协调团队：
 
-# 让写手起草文章
-@writer 基于这些资料写一篇概述
+- **模式 1 - 思考伙伴**：探索想法时，Chief 会和你一起思考，挑战有问题的逻辑，进行思维碰撞。
+- **模式 2 - 执行协调**：当你有明确的交付物时，Chief 负责分解任务、委派执行、交付成果。
 
-# 让编辑润色
-@editor 帮我精炼这段文字
+### 对话示例
+
+```
+# 调研请求 - Chief 通过 Deputy 委派给 researcher
+"帮我了解一下2024年AI发展趋势"
+
+# 写作请求 - Chief 协调 writer → editor 流水线
+"根据我们的调研写一篇关于这个话题的文章"
+
+# 核查请求 - Chief 派遣 fact-checker
+"验证这份文档中的来源"
+
+# 复杂任务 - Chief 编排多个 Agent
+"创建一份关于[主题]的综合报告，要求来源可验证"
 ```
 
 ### 使用任务分类
 
-通过 `chief_task` 工具可以按分类委派任务：
+Chief 使用 `chief_task` 按分类委派任务：
 
 | 分类 | 用途 | 模型配置 |
 |------|------|---------|
