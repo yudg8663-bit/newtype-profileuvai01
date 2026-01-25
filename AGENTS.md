@@ -164,8 +164,8 @@ import { writeFile } from "node:fs/promises"
 
 ## CONFIGURATION
 
-**User**: `~/.config/opencode/oh-my-opencode.json`
-**Project**: `<project>/.opencode/oh-my-opencode.json`
+**User**: `~/.config/opencode/newtype-profile.json`
+**Project**: `<project>/.opencode/newtype-profile.json`
 
 ```json
 {

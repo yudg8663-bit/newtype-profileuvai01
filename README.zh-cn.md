@@ -85,11 +85,11 @@ bun run build
 
 ### 配置 Agent 模型
 
-创建或编辑 oh-my-opencode 配置文件。
+创建或编辑 newtype-profile 配置文件。
 
-**用户级**：`~/.config/opencode/oh-my-opencode.json`
+**用户级**：`~/.config/opencode/newtype-profile.json`
 
-**项目级**：`<project>/.opencode/oh-my-opencode.json`
+**项目级**：`<project>/.opencode/newtype-profile.json`
 
 ```json
 {
@@ -206,7 +206,7 @@ opencode
 
 ### MCP 服务器配置
 
-插件内置了多个 MCP (Model Context Protocol) 服务器。在 `oh-my-opencode.json` 中配置：
+插件内置了多个 MCP (Model Context Protocol) 服务器。在 `newtype-profile.json` 中配置：
 
 ```json
 {

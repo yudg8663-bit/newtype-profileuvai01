@@ -1,4 +1,4 @@
-# Oh-My-OpenCode Orchestration Guide
+# Newtype-Profile Orchestration Guide
 
 ## TL;DR - When to Use What
 
@@ -21,7 +21,7 @@ Is it a quick fix or simple task?
 
 ---
 
-This document provides a comprehensive guide to the orchestration system that implements Oh-My-OpenCode's core philosophy: **"Separation of Planning and Execution"**.
+This document provides a comprehensive guide to the orchestration system that implements Newtype-Profile's core philosophy: **"Separation of Planning and Execution"**.
 
 ## 1. Overview
 
@@ -127,7 +127,7 @@ Executes the generated plan.
 
 ## 6. Configuration Guide
 
-You can control related features in `oh-my-opencode.json`.
+You can control related features in `newtype-profile.json`.
 
 ```jsonc
 {

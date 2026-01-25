@@ -68,7 +68,7 @@ Chief 说："调研 Dan Koe 的成长历程，分析他的增长策略"
 给专业 Agent 的每个任务必须是**原子的**：
 - ✅ "搜索 Dan Koe 的 YouTube 频道成长数据"
 - ✅ "搜索 Dan Koe 的核心课程和价格"
-- ❌ "调研 Dan Koe 的所有信息" ← 太宽泛，需要先拆解
+- ⚠️ "调研 Dan Koe 的所有信息" ← 宽泛任务，你来拆解后分派
 </Dispatch_Logic>
 
 <Output_Format>

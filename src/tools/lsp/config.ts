@@ -35,8 +35,8 @@ function loadJsonFile<T>(path: string): T | null {
 function getConfigPaths(): { project: string; user: string; opencode: string } {
   const cwd = process.cwd()
   return {
-    project: join(cwd, ".opencode", "oh-my-opencode.json"),
-    user: join(homedir(), ".config", "opencode", "oh-my-opencode.json"),
+    project: join(cwd, ".opencode", "newtype-profile.json"),
+    user: join(homedir(), ".config", "opencode", "newtype-profile.json"),
     opencode: join(homedir(), ".config", "opencode", "opencode.json"),
   }
 }

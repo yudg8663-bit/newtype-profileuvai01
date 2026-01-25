@@ -1,17 +1,17 @@
-# Oh-My-OpenCode CLI Guide
+# Newtype-Profile CLI Guide
 
-This document provides a comprehensive guide to using the Oh-My-OpenCode CLI tools.
+This document provides a comprehensive guide to using the Newtype-Profile CLI tools.
 
 ## 1. Overview
 
-Oh-My-OpenCode provides CLI tools accessible via the `bunx oh-my-opencode` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
+Newtype-Profile provides CLI tools accessible via the `bunx newtype-profile` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
 
 ```bash
 # Basic execution (displays help)
-bunx oh-my-opencode
+bunx newtype-profile
 
 # Or run with npx
-npx oh-my-opencode
+npx newtype-profile
 ```
 
 ---
@@ -42,8 +42,8 @@ bunx oh-my-opencode install
 
 1. **Provider Selection**: Choose your AI provider from Claude, ChatGPT, or Gemini.
 2. **API Key Input**: Enter the API key for your selected provider.
-3. **Configuration File Creation**: Generates `opencode.json` or `oh-my-opencode.json` files.
-4. **Plugin Registration**: Automatically registers the oh-my-opencode plugin in OpenCode settings.
+3. **Configuration File Creation**: Generates `opencode.json` or `newtype-profile.json` files.
+4. **Plugin Registration**: Automatically registers the newtype-profile plugin in OpenCode settings.
 
 ### Options
 
@@ -56,7 +56,7 @@ bunx oh-my-opencode install
 
 ## 4. `doctor` - Environment Diagnostics
 
-Diagnoses your environment to ensure Oh-My-OpenCode is functioning correctly. Performs 17+ health checks.
+Diagnoses your environment to ensure Newtype-Profile is functioning correctly. Performs 17+ health checks.
 
 ### Usage
 
@@ -86,10 +86,10 @@ bunx oh-my-opencode doctor
 ### Example Output
 
 ```
-oh-my-opencode doctor
+newtype-profile doctor
 
 ┌──────────────────────────────────────────────────┐
-│  Oh-My-OpenCode Doctor                           │
+│  Newtype-Profile Doctor                          │
 └──────────────────────────────────────────────────┘
 
 Installation
@@ -97,8 +97,8 @@ Installation
   ✓ Plugin registered in opencode.json
 
 Configuration
-  ✓ oh-my-opencode.json is valid
-  ⚠ categories.visual-engineering: using default model
+  ✓ newtype-profile.json is valid
+  ⚠ agents.writer: using default model
 
 Authentication
   ✓ Anthropic API key configured
@@ -157,8 +157,8 @@ bunx oh-my-opencode auth status
 
 The CLI searches for configuration files in the following locations (in priority order):
 
-1. **Project Level**: `.opencode/oh-my-opencode.json`
-2. **User Level**: `~/.config/opencode/oh-my-opencode.json`
+1. **Project Level**: `.opencode/newtype-profile.json`
+2. **User Level**: `~/.config/opencode/newtype-profile.json`
 
 ### JSONC Support
 
@@ -198,17 +198,17 @@ bun install -g opencode@latest
 
 ```bash
 # Reinstall plugin
-bunx oh-my-opencode install
+bunx newtype-profile install
 ```
 
 ### Doctor Check Failures
 
 ```bash
 # Diagnose with detailed information
-bunx oh-my-opencode doctor --verbose
+bunx newtype-profile doctor --verbose
 
 # Check specific category only
-bunx oh-my-opencode doctor --category authentication
+bunx newtype-profile doctor --category authentication
 ```
 
 ---
@@ -219,10 +219,10 @@ Use the `--no-tui` option for CI/CD environments.
 
 ```bash
 # Run doctor in CI environment
-bunx oh-my-opencode doctor --no-tui --json
+bunx newtype-profile doctor --no-tui --json
 
 # Save results to file
-bunx oh-my-opencode doctor --json > doctor-report.json
+bunx newtype-profile doctor --json > doctor-report.json
 ```
 
 ---

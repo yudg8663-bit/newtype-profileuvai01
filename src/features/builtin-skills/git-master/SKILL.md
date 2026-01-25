@@ -532,7 +532,7 @@ If ANY check fails -> REWRITE message.
 
 ### 5.5 Commit Footer & Co-Author (Configurable)
 
-**Check oh-my-opencode.json for these flags:**
+**Check newtype-profile.json for these flags:**
 - `git_master.commit_footer` (default: true) - adds footer message
 - `git_master.include_co_authored_by` (default: true) - adds co-author trailer
 
@@ -553,7 +553,7 @@ Co-authored-by: Sisyphus <clio-agent@sisyphuslabs.ai>
 git commit -m "{Commit Message}" -m "Ultraworked with [Sisyphus](https://github.com/code-yeongyu/oh-my-opencode)" -m "Co-authored-by: Sisyphus <clio-agent@sisyphuslabs.ai>"
 ```
 
-**To disable:** Set in oh-my-opencode.json:
+**To disable:** Set in newtype-profile.json:
 ```json
 { "git_master": { "commit_footer": false, "include_co_authored_by": false } }
 ```

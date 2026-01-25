@@ -13,10 +13,10 @@ import * as fs from "fs"
 export function getUserConfigDir(): string {
   if (process.platform === "win32") {
     const crossPlatformDir = path.join(os.homedir(), ".config")
-    const crossPlatformConfigPath = path.join(crossPlatformDir, "opencode", "oh-my-opencode.json")
+    const crossPlatformConfigPath = path.join(crossPlatformDir, "opencode", "newtype-profile.json")
 
     const appdataDir = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming")
-    const appdataConfigPath = path.join(appdataDir, "opencode", "oh-my-opencode.json")
+    const appdataConfigPath = path.join(appdataDir, "opencode", "newtype-profile.json")
 
     if (fs.existsSync(crossPlatformConfigPath)) {
       return crossPlatformDir
@@ -33,15 +33,15 @@ export function getUserConfigDir(): string {
 }
 
 /**
- * Returns the full path to the user-level oh-my-opencode config file.
+ * Returns the full path to the user-level newtype-profile config file.
  */
 export function getUserConfigPath(): string {
-  return path.join(getUserConfigDir(), "opencode", "oh-my-opencode.json")
+  return path.join(getUserConfigDir(), "opencode", "newtype-profile.json")
 }
 
 /**
- * Returns the full path to the project-level oh-my-opencode config file.
+ * Returns the full path to the project-level newtype-profile config file.
  */
 export function getProjectConfigPath(directory: string): string {
-  return path.join(directory, ".opencode", "oh-my-opencode.json")
+  return path.join(directory, ".opencode", "newtype-profile.json")
 }

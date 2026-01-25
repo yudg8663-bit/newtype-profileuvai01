@@ -124,9 +124,9 @@ export function getNotificationConflictWarning(pluginName: string): string {
 ⚠️  Both oh-my-opencode and ${pluginName} listen to session.idle events.
    Running both simultaneously can cause crashes on Windows.
 
-   oh-my-opencode's session-notification has been auto-disabled.
+   newtype-profile's session-notification has been auto-disabled.
 
-   To use oh-my-opencode's notifications instead, either:
+   To use newtype-profile's notifications instead, either:
    1. Remove ${pluginName} from your opencode.json plugins
-   2. Or set "notification": { "force_enable": true } in oh-my-opencode.json`
+   2. Or set "notification": { "force_enable": true } in newtype-profile.json`
 }

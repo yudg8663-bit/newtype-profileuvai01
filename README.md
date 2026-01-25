@@ -85,11 +85,11 @@ Then reference the local path in your config:
 
 ### Configure Agent Models
 
-Create or edit the oh-my-opencode config file.
+Create or edit the newtype-profile config file.
 
-**User-level**: `~/.config/opencode/oh-my-opencode.json`
+**User-level**: `~/.config/opencode/newtype-profile.json`
 
-**Project-level**: `<project>/.opencode/oh-my-opencode.json`
+**Project-level**: `<project>/.opencode/newtype-profile.json`
 
 ```json
 {
@@ -206,7 +206,7 @@ Override default settings in your config file:
 
 ### MCP Server Configuration
 
-The plugin includes built-in MCP (Model Context Protocol) servers. Configure them in your `oh-my-opencode.json`:
+The plugin includes built-in MCP (Model Context Protocol) servers. Configure them in your `newtype-profile.json`:
 
 ```json
 {

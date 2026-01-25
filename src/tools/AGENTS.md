@@ -66,9 +66,9 @@ tools/
 ## LSP SPECIFICS
 
 - **Client lifecycle**: Lazy init on first use, auto-shutdown on idle
-- **Config priority**: opencode.json > oh-my-opencode.json > defaults
+- **Config priority**: opencode.json > newtype-profile.json > defaults
 - **Supported servers**: typescript-language-server, pylsp, gopls, rust-analyzer, etc.
-- **Custom servers**: Add via `lsp` config in oh-my-opencode.json
+- **Custom servers**: Add via `lsp` config in newtype-profile.json
 
 ## AST-GREP SPECIFICS
 
