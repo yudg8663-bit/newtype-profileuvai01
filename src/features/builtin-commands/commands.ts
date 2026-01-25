@@ -4,6 +4,7 @@ import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
 import { START_WORK_TEMPLATE } from "./templates/start-work"
+import { SWITCH_PLUGIN_TEMPLATE } from "./templates/switch-plugin"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
@@ -58,6 +59,13 @@ Timestamp: $TIMESTAMP
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[plan-name]",
+  },
+  "switch": {
+    description: "(builtin) Switch OpenCode plugin (newtype/omo/none)",
+    template: `<command-instruction>
+${SWITCH_PLUGIN_TEMPLATE}
+</command-instruction>`,
+    argumentHint: "<newtype|omo|none>",
   },
 }
 
