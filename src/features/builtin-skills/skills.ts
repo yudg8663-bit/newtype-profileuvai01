@@ -1226,5 +1226,5 @@ POTENTIAL ACTIONS:
 }
 
 export function createBuiltinSkills(): BuiltinSkill[] {
-  return [playwrightSkill, frontendUiUxSkill, gitMasterSkill]
+  return [playwrightSkill]
 }

@@ -121,7 +121,7 @@ describe("buildAgent with category and skills", () => {
       "test-agent": () =>
         ({
           description: "Test agent",
-          skills: ["frontend-ui-ux"],
+          skills: ["playwright"],
           prompt: "Original prompt content",
         }) as AgentConfig,
     }
@@ -130,9 +130,9 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"])
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
+    expect(agent.prompt).toContain("Playwright Browser Automation")
     expect(agent.prompt).toContain("Original prompt content")
-    expect(agent.prompt).toMatch(/Designer-Turned-Developer[\s\S]*Original prompt content/s)
+    expect(agent.prompt).toMatch(/Playwright[\s\S]*Original prompt content/s)
   })
 
   test("agent with multiple skills has all content prepended", () => {
@@ -141,7 +141,7 @@ describe("buildAgent with category and skills", () => {
       "test-agent": () =>
         ({
           description: "Test agent",
-          skills: ["frontend-ui-ux"],
+          skills: ["playwright"],
           prompt: "Agent prompt",
         }) as AgentConfig,
     }
@@ -150,7 +150,7 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"])
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
+    expect(agent.prompt).toContain("Playwright Browser Automation")
     expect(agent.prompt).toContain("Agent prompt")
   })
 
@@ -182,7 +182,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           category: "writing",
-          skills: ["frontend-ui-ux"],
+          skills: ["playwright"],
           prompt: "Task description",
         }) as AgentConfig,
     }
@@ -193,7 +193,7 @@ describe("buildAgent with category and skills", () => {
     // #then
     expect(agent.model).toBe("google/antigravity-gemini-3-pro-high")
     expect(agent.temperature).toBe(0.7)
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
+    expect(agent.prompt).toContain("Playwright Browser Automation")
     expect(agent.prompt).toContain("Task description")
   })
 
@@ -222,7 +222,7 @@ describe("buildAgent with category and skills", () => {
       "test-agent": () =>
         ({
           description: "Test agent",
-          skills: ["frontend-ui-ux", "non-existent-skill"],
+          skills: ["playwright", "non-existent-skill"],
           prompt: "Base prompt",
         }) as AgentConfig,
     }
@@ -231,7 +231,7 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"])
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
+    expect(agent.prompt).toContain("Playwright Browser Automation")
     expect(agent.prompt).toContain("Base prompt")
   })
 

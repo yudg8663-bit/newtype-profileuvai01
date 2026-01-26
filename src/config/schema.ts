@@ -32,8 +32,6 @@ export const BuiltinAgentNameSchema = z.enum([
 
 export const BuiltinSkillNameSchema = z.enum([
   "playwright",
-  "frontend-ui-ux",
-  "git-master",
 ])
 
 export const OverridableAgentNameSchema = z.enum([
@@ -80,13 +78,14 @@ export const HookNameSchema = z.enum([
   "auto-slash-command",
   "edit-error-recovery",
   "prometheus-md-only",
-  "start-work",
   "chief-orchestrator",
 ])
 
 export const BuiltinCommandNameSchema = z.enum([
   "init-deep",
-  "start-work",
+  "ralph-loop",
+  "cancel-ralph",
+  "switch",
 ])
 
 export const AgentOverrideConfigSchema = z.object({

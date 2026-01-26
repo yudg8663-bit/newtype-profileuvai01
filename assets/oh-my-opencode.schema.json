@@ -35,9 +35,7 @@
       "items": {
         "type": "string",
         "enum": [
-          "playwright",
-          "frontend-ui-ux",
-          "git-master"
+          "playwright"
         ]
       }
     },
@@ -75,7 +73,6 @@
           "auto-slash-command",
           "edit-error-recovery",
           "prometheus-md-only",
-          "start-work",
           "chief-orchestrator"
         ]
       }
@@ -86,7 +83,9 @@
         "type": "string",
         "enum": [
           "init-deep",
-          "start-work"
+          "ralph-loop",
+          "cancel-ralph",
+          "switch"
         ]
       }
     },

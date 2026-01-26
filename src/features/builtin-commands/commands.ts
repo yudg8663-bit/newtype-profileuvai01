@@ -2,13 +2,11 @@ import type { CommandDefinition } from "../claude-code-command-loader"
 import type { BuiltinCommandName, BuiltinCommands } from "./types"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
-import { REFACTOR_TEMPLATE } from "./templates/refactor"
-import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { SWITCH_PLUGIN_TEMPLATE } from "./templates/switch-plugin"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
-    description: "(builtin) Initialize hierarchical AGENTS.md knowledge base",
+    description: "(builtin) Generate KNOWLEDGE.md index for document repositories",
     template: `<command-instruction>
 ${INIT_DEEP_TEMPLATE}
 </command-instruction>
@@ -19,7 +17,7 @@ $ARGUMENTS
     argumentHint: "[--create-new] [--max-depth=N]",
   },
   "ralph-loop": {
-    description: "(builtin) Start self-referential development loop until completion",
+    description: "(builtin) Start self-referential task loop until completion",
     template: `<command-instruction>
 ${RALPH_LOOP_TEMPLATE}
 </command-instruction>
@@ -34,31 +32,6 @@ $ARGUMENTS
     template: `<command-instruction>
 ${CANCEL_RALPH_TEMPLATE}
 </command-instruction>`,
-  },
-  refactor: {
-    description:
-      "(builtin) Intelligent refactoring command with LSP, AST-grep, architecture analysis, codemap, and TDD verification.",
-    template: `<command-instruction>
-${REFACTOR_TEMPLATE}
-</command-instruction>`,
-    argumentHint: "<refactoring-target> [--scope=<file|module|project>] [--strategy=<safe|aggressive>]",
-  },
-  "start-work": {
-    description: "(builtin) Start Sisyphus work session from Prometheus plan",
-    agent: "orchestrator-sisyphus",
-    template: `<command-instruction>
-${START_WORK_TEMPLATE}
-</command-instruction>
-
-<session-context>
-Session ID: $SESSION_ID
-Timestamp: $TIMESTAMP
-</session-context>
-
-<user-request>
-$ARGUMENTS
-</user-request>`,
-    argumentHint: "[plan-name]",
   },
   "switch": {
     description: "(builtin) Switch OpenCode plugin (newtype/omo/none)",

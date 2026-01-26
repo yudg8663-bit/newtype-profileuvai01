@@ -1,271 +1,228 @@
 export const INIT_DEEP_TEMPLATE = `# /init-deep
 
-Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
+Generate a KNOWLEDGE.md file to help AI understand a document repository or knowledge base.
 
 ## Usage
 
 \`\`\`
-/init-deep                      # Update mode: modify existing + create new where warranted
-/init-deep --create-new         # Read existing → remove all → regenerate from scratch
-/init-deep --max-depth=2        # Limit directory depth (default: 3)
+/init-deep                      # Analyze and generate/update KNOWLEDGE.md
+/init-deep --create-new         # Delete existing and regenerate from scratch
+/init-deep --max-depth=3        # Limit directory scan depth (default: 5)
 \`\`\`
 
 ---
 
-## Workflow (High-Level)
+## What This Does
 
-1. **Discovery + Analysis** (concurrent)
-   - Delegate to Deputy for codebase exploration
-   - Main session: bash structure + LSP codemap + read existing AGENTS.md
-2. **Score & Decide** - Determine AGENTS.md locations from merged findings
-3. **Generate** - Root first, then subdirs in parallel
-4. **Review** - Deduplicate, trim, validate
+Scans a document repository (any structure) and generates a knowledge index that helps AI:
+- Understand what content exists
+- Know where to find specific types of documents
+- Recognize the organizational pattern (even if non-standard)
+
+---
+
+## Workflow
 
 <critical>
 **TodoWrite ALL phases. Mark in_progress → completed in real-time.**
 \`\`\`
 TodoWrite([
-  { id: "discovery", content: "Delegate to Deputy for exploration + LSP codemap + read existing", status: "pending", priority: "high" },
-  { id: "scoring", content: "Score directories, determine locations", status: "pending", priority: "high" },
-  { id: "generate", content: "Generate AGENTS.md files (root + subdirs)", status: "pending", priority: "high" },
-  { id: "review", content: "Deduplicate, validate, trim", status: "pending", priority: "medium" }
+  { id: "scan", content: "Scan directory structure and file types", status: "pending", priority: "high" },
+  { id: "analyze", content: "Analyze content and extract summaries", status: "pending", priority: "high" },
+  { id: "generate", content: "Generate KNOWLEDGE.md", status: "pending", priority: "high" },
+  { id: "review", content: "Review and refine output", status: "pending", priority: "medium" }
 ])
 \`\`\`
 </critical>
 
 ---
 
-## Phase 1: Discovery + Analysis (Concurrent)
+## Phase 1: Directory Scan
 
-**Mark "discovery" as in_progress.**
+**Mark "scan" as in_progress.**
 
-### Delegate Exploration to Deputy
+### 1.1 Discover Structure
 
-Delegate comprehensive codebase analysis to Deputy:
+\`\`\`bash
+# Get directory tree (exclude hidden, node_modules, etc.)
+find . -type d -not -path '*/\\.*' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' | head -100
 
+# Count files by type
+find . -type f -not -path '*/\\.*' | sed 's/.*\\.//' | sort | uniq -c | sort -rn | head -20
+
+# List document files
+find . -type f \\( -name "*.md" -o -name "*.pdf" -o -name "*.docx" -o -name "*.txt" -o -name "*.rtf" \\) -not -path '*/\\.*' | head -100
+
+# List media files
+find . -type f \\( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" -o -name "*.mp4" -o -name "*.mp3" \\) -not -path '*/\\.*' | head -50
+
+# Check for existing KNOWLEDGE.md or similar
+find . -type f \\( -name "KNOWLEDGE.md" -o -name "README.md" -o -name "INDEX.md" \\) -not -path '*/\\.*'
+
+# File count per directory (top 30)
+find . -type f -not -path '*/\\.*' | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -30
 \`\`\`
-chief_task(
-  subagent_type="deputy",
-  prompt="Analyze codebase for AGENTS.md generation. Research:
-  1. Project structure: standard patterns vs deviations
-  2. Entry points: main files and non-standard organization
-  3. Conventions: config files (.eslintrc, pyproject.toml, .editorconfig)
-  4. Anti-patterns: 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments
-  5. Build/CI: .github/workflows, Makefile patterns
-  6. Test patterns: test configs and structure
+
+### 1.2 Identify File Type Distribution
+
+Build a mental model:
+\`\`\`
+CONTENT_PROFILE:
+  documents: N (md, pdf, docx, txt)
+  images: N (png, jpg, svg)
+  data: N (json, csv, xlsx)
+  code: N (if any - py, js, ts)
+  other: N
   
-  Return structured findings for documentation generation.",
-  run_in_background=true,
-  skills=[]
-)
+STRUCTURE_TYPE:
+  - flat (all files in root)
+  - shallow (1-2 levels)
+  - deep (3+ levels)
+  - mixed
 \`\`\`
 
-<dynamic-analysis>
-**DYNAMIC DEPTH**: For large projects, Deputy will automatically dispatch multiple researcher tasks:
-
-| Factor | Threshold | Deputy Action |
-|--------|-----------|---------------|
-| **Total files** | >100 | More thorough file analysis |
-| **Directory depth** | ≥4 | Deep module exploration |
-| **Large files (>500 lines)** | >10 files | Complexity hotspot analysis |
-| **Monorepo** | detected | Per-package analysis |
-
-\`\`\`bash
-# Measure project scale first (optional - Deputy will assess)
-total_files=$(find . -type f -not -path '*/node_modules/*' -not -path '*/.git/*' | wc -l)
-max_depth=$(find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' | awk -F/ '{print NF}' | sort -rn | head -1)
-\`\`\`
-
-For very large projects, send additional Deputy tasks:
-\`\`\`
-chief_task(
-  subagent_type="deputy",
-  prompt="Deep analysis for large codebase: Find files >500 lines, complexity hotspots, cross-cutting concerns.",
-  run_in_background=true,
-  skills=[]
-)
-\`\`\`
-</dynamic-analysis>
-
-### Main Session: Concurrent Analysis
-
-**While background agents run**, main session does:
-
-#### 1. Bash Structural Analysis
-\`\`\`bash
-# Directory depth + file counts
-find . -type d -not -path '*/\\.*' -not -path '*/node_modules/*' -not -path '*/venv/*' -not -path '*/dist/*' -not -path '*/build/*' | awk -F/ '{print NF-1}' | sort -n | uniq -c
-
-# Files per directory (top 30)
-find . -type f -not -path '*/\\.*' -not -path '*/node_modules/*' | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -30
-
-# Code concentration by extension
-find . -type f \\( -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.go" -o -name "*.rs" \\) -not -path '*/node_modules/*' | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -20
-
-# Existing AGENTS.md / CLAUDE.md
-find . -type f \\( -name "AGENTS.md" -o -name "CLAUDE.md" \\) -not -path '*/node_modules/*' 2>/dev/null
-\`\`\`
-
-#### 2. Read Existing AGENTS.md
-\`\`\`
-For each existing file found:
-  Read(filePath=file)
-  Extract: key insights, conventions, anti-patterns
-  Store in EXISTING_AGENTS map
-\`\`\`
-
-If \`--create-new\`: Read all existing first (preserve context) → then delete all → regenerate.
-
-#### 3. LSP Codemap (if available)
-\`\`\`
-lsp_servers()  # Check availability
-
-# Entry points (parallel)
-lsp_document_symbols(filePath="src/index.ts")
-lsp_document_symbols(filePath="main.py")
-
-# Key symbols (parallel)
-lsp_workspace_symbols(filePath=".", query="class")
-lsp_workspace_symbols(filePath=".", query="interface")
-lsp_workspace_symbols(filePath=".", query="function")
-
-# Centrality for top exports
-lsp_find_references(filePath="...", line=X, character=Y)
-\`\`\`
-
-**LSP Fallback**: If unavailable, rely on Deputy + AST-grep.
-
-### Collect Background Results
-
-\`\`\`
-// After main session analysis done, collect all task results
-for each task_id: background_output(task_id="...")
-\`\`\`
-
-**Merge: bash + LSP + existing + Deputy findings. Mark "discovery" as completed.**
+**Mark "scan" as completed.**
 
 ---
 
-## Phase 2: Scoring & Location Decision
+## Phase 2: Content Analysis
 
-**Mark "scoring" as in_progress.**
+**Mark "analyze" as in_progress.**
 
-### Scoring Matrix
+### 2.1 Read Key Documents
 
-| Factor | Weight | High Threshold | Source |
-|--------|--------|----------------|--------|
-| File count | 3x | >20 | bash |
-| Subdir count | 2x | >5 | bash |
-| Code ratio | 2x | >70% | bash |
-| Unique patterns | 1x | Has own config | Deputy |
-| Module boundary | 2x | Has index.ts/__init__.py | bash |
-| Symbol density | 2x | >30 symbols | LSP |
-| Export count | 2x | >10 exports | LSP |
-| Reference centrality | 3x | >20 refs | LSP |
+For each directory with documents:
 
-### Decision Rules
-
-| Score | Action |
-|-------|--------|
-| **Root (.)** | ALWAYS create |
-| **>15** | Create AGENTS.md |
-| **8-15** | Create if distinct domain |
-| **<8** | Skip (parent covers) |
-
-### Output
 \`\`\`
-AGENTS_LOCATIONS = [
-  { path: ".", type: "root" },
-  { path: "src/hooks", score: 18, reason: "high complexity" },
-  { path: "src/api", score: 12, reason: "distinct domain" }
-]
+# Priority reading order:
+1. README.md / INDEX.md (if exists)
+2. Largest markdown files (likely main content)
+3. Recently modified files
+4. Files with descriptive names
 \`\`\`
 
-**Mark "scoring" as completed.**
+Use \`Read\` tool on markdown files to understand content.
+
+### 2.2 Extract PDF/Document Summaries
+
+For PDFs and other binary documents:
+\`\`\`
+Use look_at tool to extract:
+- Title
+- First page summary
+- Key topics
+\`\`\`
+
+### 2.3 Infer Topics and Categories
+
+From file names and content, extract:
+- Main topics/themes
+- Naming patterns
+- Organizational logic (by date? by topic? by project?)
+
+**Mark "analyze" as completed.**
 
 ---
 
-## Phase 3: Generate AGENTS.md
+## Phase 3: Generate KNOWLEDGE.md
 
 **Mark "generate" as in_progress.**
 
-### Root AGENTS.md (Full Treatment)
+### Output Template
 
 \`\`\`markdown
-# PROJECT KNOWLEDGE BASE
+# KNOWLEDGE BASE INDEX
 
 **Generated:** {TIMESTAMP}
-**Commit:** {SHORT_SHA}
-**Branch:** {BRANCH}
-
-## OVERVIEW
-{1-2 sentences: what + core stack}
-
-## STRUCTURE
-\\\`\\\`\\\`
-{root}/
-├── {dir}/    # {non-obvious purpose only}
-└── {entry}
-\\\`\\\`\\\`
-
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-
-## CODE MAP
-{From LSP - skip if unavailable or project <10 files}
-
-| Symbol | Type | Location | Refs | Role |
-|--------|------|----------|------|------|
-
-## CONVENTIONS
-{ONLY deviations from standard}
-
-## ANTI-PATTERNS (THIS PROJECT)
-{Explicitly forbidden here}
-
-## UNIQUE STYLES
-{Project-specific}
-
-## COMMANDS
-\\\`\\\`\\\`bash
-{dev/test/build}
-\\\`\\\`\\\`
-
-## NOTES
-{Gotchas}
-\`\`\`
-
-**Quality gates**: 50-150 lines, no generic advice, no obvious info.
-
-### Subdirectory AGENTS.md (Parallel)
-
-Launch document-writer agents for each location:
-
-\`\`\`
-for loc in AGENTS_LOCATIONS (except root):
-  sisyphus_task(agent="document-writer", prompt=\\\`
-    Generate AGENTS.md for: \${loc.path}
-    - Reason: \${loc.reason}
-    - 30-80 lines max
-    - NEVER repeat parent content
-    - Sections: OVERVIEW (1 line), STRUCTURE (if >5 subdirs), WHERE TO LOOK, CONVENTIONS (if different), ANTI-PATTERNS
-  \\\`)
-\`\`\`
-
-**Wait for all. Mark "generate" as completed.**
+**Last Updated:** {DATE}
+**Total Files:** {N} documents, {N} images, {N} other
 
 ---
 
-## Phase 4: Review & Deduplicate
+## OVERVIEW
+
+{1-3 sentences describing what this knowledge base contains and its purpose}
+
+---
+
+## STRUCTURE
+
+\\\`\\\`\\\`
+{directory}/
+├── {folder1}/    # {what's in here}
+│   └── ...
+├── {folder2}/    # {what's in here}
+└── {file.md}     # {brief description}
+\\\`\\\`\\\`
+
+---
+
+## KEY DOCUMENTS
+
+| File | Description | Topics |
+|------|-------------|--------|
+| {path} | {what it contains} | {tags} |
+| ... | ... | ... |
+
+---
+
+## TOPICS & TAGS
+
+- **{Topic 1}**: {related files or folders}
+- **{Topic 2}**: {related files or folders}
+- ...
+
+---
+
+## FOLDER GUIDE
+
+| Folder | Purpose | File Count |
+|--------|---------|------------|
+| {path} | {what to find here} | {N} |
+| ... | ... | ... |
+
+---
+
+## FILE TYPES
+
+| Type | Count | Location |
+|------|-------|----------|
+| Markdown (.md) | {N} | {where they are} |
+| PDF (.pdf) | {N} | {where they are} |
+| Images | {N} | {where they are} |
+| ... | ... | ... |
+
+---
+
+## NOTES
+
+{Any discovered patterns, conventions, or important observations}
+- {Naming convention if any}
+- {Organization pattern}
+- {Special files or folders}
+\`\`\`
+
+### Writing Guidelines
+
+1. **Be specific** - Don't say "various documents", say what they actually are
+2. **Be concise** - One line per item, no verbose descriptions
+3. **Be accurate** - Only include what you actually found
+4. **Be helpful** - Focus on what helps AI find relevant content
+
+**Mark "generate" as completed.**
+
+---
+
+## Phase 4: Review
 
 **Mark "review" as in_progress.**
 
-For each generated file:
-- Remove generic advice
-- Remove parent duplicates
-- Trim to size limits
-- Verify telegraphic style
+1. Check KNOWLEDGE.md is not too long (50-200 lines ideal)
+2. Remove any generic/unhelpful entries
+3. Ensure all paths are correct
+4. Verify descriptions are accurate
+
+Write the final KNOWLEDGE.md to the repository root.
 
 **Mark "review" as completed.**
 
@@ -276,29 +233,24 @@ For each generated file:
 \`\`\`
 === init-deep Complete ===
 
-Mode: {update | create-new}
+Repository: {path}
+Files Analyzed: {N}
+Folders Scanned: {N}
 
-Files:
-  ✓ ./AGENTS.md (root, {N} lines)
-  ✓ ./src/hooks/AGENTS.md ({N} lines)
+Generated: ./KNOWLEDGE.md ({N} lines)
 
-Dirs Analyzed: {N}
-AGENTS.md Created: {N}
-AGENTS.md Updated: {N}
-
-Hierarchy:
-  ./AGENTS.md
-  └── src/hooks/AGENTS.md
+Key Findings:
+- {Main content type}
+- {Organization pattern}
+- {Notable files}
 \`\`\`
 
 ---
 
 ## Anti-Patterns
 
-- **Static approach**: MUST adapt depth of analysis based on project size
-- **Sequential execution**: MUST parallel (Deputy + LSP concurrent)
-- **Ignoring existing**: ALWAYS read existing first, even with --create-new
-- **Over-documenting**: Not every dir needs AGENTS.md
-- **Redundancy**: Child never repeats parent
-- **Generic content**: Remove anything that applies to ALL projects
-- **Verbose style**: Telegraphic or die`
+- **Don't assume structure** - Every repository is different
+- **Don't skip binary files** - PDFs often contain key content
+- **Don't be verbose** - Keep entries concise
+- **Don't list everything** - Focus on key/representative files
+- **Don't ignore patterns** - Document any discovered conventions`

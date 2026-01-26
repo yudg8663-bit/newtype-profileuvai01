@@ -27,7 +27,6 @@ import {
   createAutoSlashCommandHook,
   createEditErrorRecoveryHook,
   createTaskResumeInfoHook,
-  createStartWorkHook,
   createChiefOrchestratorHook,
   createPrometheusMdOnlyHook,
 } from "./hooks";
@@ -196,10 +195,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createEditErrorRecoveryHook(ctx)
     : null;
 
-  const startWork = isHookEnabled("start-work")
-    ? createStartWorkHook(ctx)
-    : null;
-
   if (pluginConfig.confidence) {
     setConfidenceConfig(pluginConfig.confidence);
   }
@@ -318,7 +313,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await keywordDetector?.["chat.message"]?.(input, output);
       await contextInjector["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
-      await startWork?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {
         const parts = (

@@ -2,17 +2,6 @@ import { describe, it, expect } from "bun:test"
 import { resolveSkillContent, resolveMultipleSkills } from "./skill-content"
 
 describe("resolveSkillContent", () => {
-	it("should return template for existing skill", () => {
-		// #given: builtin skills with 'frontend-ui-ux' skill
-		// #when: resolving content for 'frontend-ui-ux'
-		const result = resolveSkillContent("frontend-ui-ux")
-
-		// #then: returns template string
-		expect(result).not.toBeNull()
-		expect(typeof result).toBe("string")
-		expect(result).toContain("Role: Designer-Turned-Developer")
-	})
-
 	it("should return template for 'playwright' skill", () => {
 		// #given: builtin skills with 'playwright' skill
 		// #when: resolving content for 'playwright'
@@ -46,29 +35,27 @@ describe("resolveSkillContent", () => {
 describe("resolveMultipleSkills", () => {
 	it("should resolve all existing skills", () => {
 		// #given: list of existing skill names
-		const skillNames = ["frontend-ui-ux", "playwright"]
+		const skillNames = ["playwright"]
 
 		// #when: resolving multiple skills
 		const result = resolveMultipleSkills(skillNames)
 
 		// #then: all skills resolved, none not found
-		expect(result.resolved.size).toBe(2)
+		expect(result.resolved.size).toBe(1)
 		expect(result.notFound).toEqual([])
-		expect(result.resolved.get("frontend-ui-ux")).toContain("Designer-Turned-Developer")
 		expect(result.resolved.get("playwright")).toContain("Playwright Browser Automation")
 	})
 
 	it("should handle partial success - some skills not found", () => {
 		// #given: list with existing and non-existing skills
-		const skillNames = ["frontend-ui-ux", "nonexistent", "playwright", "another-missing"]
+		const skillNames = ["playwright", "nonexistent", "another-missing"]
 
 		// #when: resolving multiple skills
 		const result = resolveMultipleSkills(skillNames)
 
 		// #then: resolves existing skills, lists not found skills
-		expect(result.resolved.size).toBe(2)
+		expect(result.resolved.size).toBe(1)
 		expect(result.notFound).toEqual(["nonexistent", "another-missing"])
-		expect(result.resolved.get("frontend-ui-ux")).toContain("Designer-Turned-Developer")
 		expect(result.resolved.get("playwright")).toContain("Playwright Browser Automation")
 	})
 
@@ -97,15 +84,14 @@ describe("resolveMultipleSkills", () => {
 	})
 
 	it("should preserve skill order in resolved map", () => {
-		// #given: list of skill names in specific order
-		const skillNames = ["playwright", "frontend-ui-ux"]
+		// #given: list of skill names
+		const skillNames = ["playwright"]
 
 		// #when: resolving multiple skills
 		const result = resolveMultipleSkills(skillNames)
 
 		// #then: map contains skills with expected keys
 		expect(result.resolved.has("playwright")).toBe(true)
-		expect(result.resolved.has("frontend-ui-ux")).toBe(true)
-		expect(result.resolved.size).toBe(2)
+		expect(result.resolved.size).toBe(1)
 	})
 })
