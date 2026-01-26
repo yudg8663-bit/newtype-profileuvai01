@@ -52,7 +52,14 @@ newtype-profile is an AI Agent collaboration framework designed for **content cr
 
 #### Method 1: npm Package (Recommended)
 
-Edit `~/.config/opencode/opencode.json`:
+**Step 1:** Install the package:
+
+```bash
+cd ~/.config/opencode
+bun add newtype-profile
+```
+
+**Step 2:** Edit `~/.config/opencode/opencode.json`:
 
 ```json
 {
@@ -60,6 +67,13 @@ Edit `~/.config/opencode/opencode.json`:
     "newtype-profile"
   ]
 }
+```
+
+**To update to the latest version:**
+
+```bash
+cd ~/.config/opencode
+bun update newtype-profile
 ```
 
 #### Method 2: Clone to Local (Development)

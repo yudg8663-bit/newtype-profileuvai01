@@ -52,7 +52,14 @@ newtype-profile 是一套专为**内容创作**设计的 AI Agent 协作框架�
 
 #### 方式一：npm 包（推荐）
 
-编辑 `~/.config/opencode/opencode.json`：
+**步骤 1：** 安装包：
+
+```bash
+cd ~/.config/opencode
+bun add newtype-profile
+```
+
+**步骤 2：** 编辑 `~/.config/opencode/opencode.json`：
 
 ```json
 {
@@ -60,6 +67,13 @@ newtype-profile 是一套专为**内容创作**设计的 AI Agent 协作框架�
     "newtype-profile"
   ]
 }
+```
+
+**更新到最新版本：**
+
+```bash
+cd ~/.config/opencode
+bun update newtype-profile
 ```
 
 #### 方式二：克隆到本地（开发用）
