@@ -274,12 +274,13 @@ To disable a built-in MCP:
 
 ### Built-in Skills
 
-The plugin includes specialized skills that can be invoked via `/skill <name>`:
+The plugin includes specialized skills that can be invoked via `/skill <name>` or `/<skill-name>`:
 
-| Skill | Description |
-|-------|-------------|
-| **playwright** | Browser automation via Playwright MCP - web scraping, testing, screenshots |
-| **super-analyst** | Elite analytical consulting system with 12 professional frameworks (First Principles, SWOT, Porter's Five Forces, 5 Whys, MECE, etc.), deep thinking via Sequential Thinking MCP, and comprehensive web research |
+| Skill | Command | Description |
+|-------|---------|-------------|
+| **playwright** | `/playwright` | Browser automation via Playwright MCP - web scraping, testing, screenshots |
+| **super-analyst** | `/super-analyst` | Elite analytical consulting system with 12 professional frameworks |
+| **super-writer** | `/super-writer` | Professional content creation with 6 writing methodologies |
 
 **Super Analyst Features:**
 - 7-stage systematic workflow (Problem Understanding → Intelligence Planning → Gathering → Framework Selection → Analysis → Output)
@@ -288,11 +289,24 @@ The plugin includes specialized skills that can be invoked via `/skill <name>`:
 - Bilingual search strategy (Chinese/English)
 - Sequential Thinking integration for deep reasoning
 
+**Super Writer Features:**
+- 3-phase streamlined workflow (UNDERSTAND → PREPARE → CREATE)
+- 6 professional writing methodologies:
+  - **W.R.I.T.E** - World-building, Relevance, Information, Takeaway, Engagement
+  - **AIDA Model** - Attention, Interest, Desire, Action
+  - **Content Writing Process** - Research-driven structured content
+  - **Content Creation Techniques** - Hook, story, offer framework
+  - **High-Value Content Strategies** - Authority-building content
+  - **Storytelling Framework** - Narrative-driven engagement
+- Optional style mimicking (only when user provides reference)
+- Automatic complexity detection (simple/complex)
+- Quality checklists for each methodology
+
 To disable a built-in skill:
 
 ```json
 {
-  "disabled_skills": ["super-analyst"]
+  "disabled_skills": ["super-analyst", "super-writer"]
 }
 ```
 

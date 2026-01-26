@@ -274,12 +274,13 @@ Chief 使用 `chief_task` 按分类委派任务：
 
 ### 内置 Skills
 
-插件内置了专业技能，可通过 `/skill <name>` 调用：
+插件内置了专业技能，可通过 `/skill <name>` 或 `/<skill-name>` 调用：
 
-| 技能 | 说明 |
-|------|------|
-| **playwright** | 通过 Playwright MCP 进行浏览器自动化 - 网页抓取、测试、截图 |
-| **super-analyst** | 精英分析咨询系统，包含12个专业分析框架（第一性原理、SWOT、波特五力、5 Whys、MECE等），通过 Sequential Thinking MCP 进行深度思考，支持全面的网络调研 |
+| 技能 | 命令 | 说明 |
+|------|------|------|
+| **playwright** | `/playwright` | 通过 Playwright MCP 进行浏览器自动化 - 网页抓取、测试、截图 |
+| **super-analyst** | `/super-analyst` | 精英分析咨询系统，包含12个专业分析框架 |
+| **super-writer** | `/super-writer` | 专业内容创作系统，包含6种写作方法论 |
 
 **Super Analyst 功能特性：**
 - 7阶段系统化工作流（问题理解 → 情报规划 → 情报收集 → 框架选择 → 结构化分析 → 整合输出）
@@ -288,11 +289,24 @@ Chief 使用 `chief_task` 按分类委派任务：
 - 中英双语搜索策略
 - Sequential Thinking 深度思考集成
 
+**Super Writer 功能特性：**
+- 3阶段精简工作流（理解 → 准备 → 创作）
+- 6种专业写作方法论：
+  - **W.R.I.T.E** - 世界构建、关联性、信息、收获、参与感
+  - **AIDA 模型** - 注意、兴趣、欲望、行动
+  - **内容写作流程** - 研究驱动的结构化内容
+  - **内容创作技巧** - 钩子、故事、报价框架
+  - **高价值内容策略** - 建立权威的内容
+  - **叙事框架** - 故事驱动的互动
+- 可选风格模仿（仅当用户提供参考文本时）
+- 自动复杂度检测（简单/复杂）
+- 每种方法论的质量检查清单
+
 禁用内置 Skill：
 
 ```json
 {
-  "disabled_skills": ["super-analyst"]
+  "disabled_skills": ["super-analyst", "super-writer"]
 }
 ```
 

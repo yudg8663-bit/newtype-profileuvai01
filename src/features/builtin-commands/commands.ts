@@ -53,6 +53,19 @@ $ARGUMENTS
 </user-request>`,
     argumentHint: "<analysis question or problem>",
   },
+  "super-writer": {
+    description: "(builtin) Professional content creation with 6 writing methodologies",
+    template: `<command-instruction>
+Use the skill tool to load the super-writer skill, then follow its instructions.
+
+Call: skill({ name: "super-writer" })
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "<content creation request>",
+  },
 }
 
 export function loadBuiltinCommands(

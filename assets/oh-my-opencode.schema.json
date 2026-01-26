@@ -36,7 +36,8 @@
         "type": "string",
         "enum": [
           "playwright",
-          "super-analyst"
+          "super-analyst",
+          "super-writer"
         ]
       }
     },

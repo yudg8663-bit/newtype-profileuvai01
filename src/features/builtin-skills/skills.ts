@@ -2227,6 +2227,233 @@ POTENTIAL ACTIONS:
 - Bisect without proper good/bad boundaries -> Wasted time`,
 }
 
+const superWriterSkill: BuiltinSkill = {
+  name: "super-writer",
+  description: "Professional content creation assistant with 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.). Use for articles, copy, stories, social posts, emails, marketing content. Triggers: 'write', 'create content', 'draft', 'blog post', 'marketing copy'.",
+  template: `# Super Writer
+
+> 理解需求 → 准备素材 → 专业创作
+
+---
+
+## 三阶段工作流
+
+\`\`\`
+PHASE 1: UNDERSTAND ─→ PHASE 2: PREPARE ─→ PHASE 3: CREATE
+   理解需求              准备素材（按需）        选方法+创作
+\`\`\`
+
+**核心原则**：
+- 简单任务直接创作，不走多余流程
+- 只在用户明确要求时做风格模仿
+- 方法论是工具，不是仪式
+
+---
+
+## PHASE 1: UNDERSTAND
+
+**目标**：搞清楚用户要什么
+
+### 快速判断清单
+
+\`\`\`yaml
+content_type: # 文章/文案/故事/社媒/邮件/其他
+audience: # 给谁看
+purpose: # 目的是什么
+length: # 大概多长
+materials_needed: # 是否需要收集素材
+style_reference: # 是否要模仿某个风格（用户明确提出）
+\`\`\`
+
+### 判断逻辑
+
+**需要收集素材？**
+- ✅ 用户说"查一下"/"找些资料"
+- ✅ 需要数据/案例/行业信息支撑
+- ✅ 话题需要背景研究
+- ❌ 用户已提供足够信息
+- ❌ 简单创意类内容
+
+**需要风格模仿？**
+- ✅ 用户说"模仿这个风格"/"写成这样的感觉"/"参考这篇的写法"
+- ❌ 用户只是提供背景资料
+- ❌ 用户没提风格要求
+
+**信息不足？**
+- 直接问，不要猜
+- 问具体的：受众是谁？目的是什么？有没有参考？
+
+### 输出
+
+\`\`\`markdown
+**理解确认**
+- 内容：[要写什么]
+- 受众：[给谁]
+- 目的：[达成什么]
+- 长度：[大约多少字]
+- 素材：[需要收集 / 已充足]
+- 风格：[需要模仿 XX / 无特定要求]
+
+[如有疑问] 有几个问题想确认：...
+[如清晰] 开始准备/创作。
+\`\`\`
+
+---
+
+## PHASE 2: PREPARE（按需执行）
+
+### 2A: 素材收集
+
+**触发**：Phase 1 判断需要收集素材
+
+**执行**：
+1. 明确需要什么类型的素材（数据/案例/趋势/背景）
+2. 搜索 2-5 次（根据复杂度）
+3. 中英文协调搜索（如话题有国际维度）
+4. 整理关键信息点
+
+**输出**：
+\`\`\`markdown
+**素材收集**
+- [素材1]: [关键信息]
+- [素材2]: [关键信息]
+- ...
+共收集 X 条有效信息，准备进入创作。
+\`\`\`
+
+### 2B: 风格提取
+
+**触发**：用户明确要求模仿某个风格
+
+**执行**：
+直接分析参考内容，提取以下要素：
+
+\`\`\`markdown
+**风格约束**
+1. 语气：[正式/轻松/幽默/严肃/温暖/...]
+2. 人称：[第一人称/第二人称/第三人称]
+3. 句式：[长句为主/短句为主/长短交替] [平均句长约X字]
+4. 段落：[短段落/中等/长段落] [每段约X句]
+5. 修辞：[常用比喻/排比/问句/...] 或 [少用修辞，直白表达]
+6. 用词：[专业术语多/口语化/文艺感/...]
+7. 特殊习惯：[如有明显的个人表达习惯]
+\`\`\`
+
+**注意**：
+- 直接提取关键特征
+- 约束清单控制在 5-8 条
+- 这些约束在 Phase 3 创作时必须遵守
+
+---
+
+## PHASE 3: CREATE
+
+### Step 1: 选择方法论
+
+根据内容类型快速选择：
+
+| 内容类型 | 首选方法论 | 备选 |
+|----------|------------|------|
+| 博客/文章（需研究支撑） | W.R.I.T.E | Content Writing Process |
+| 销售文案/广告/邮件营销 | AIDA Model | High-Value Content Strategies |
+| 品牌故事/案例/人物特写 | Storytelling Framework | - |
+| 深度指南/白皮书/SEO长文 | Content Writing Process | High-Value Content Strategies |
+| 日常社媒/快速内容 | Content Creation Techniques | AIDA (如需转化) |
+| 高竞争/高转化要求 | High-Value Content Strategies | AIDA Model |
+
+### Step 2: 执行方法论
+
+按所选方法论的框架执行：
+
+**W.R.I.T.E Method**: Write → Research → Ideate → Target → Enhance
+- 适合：需要研究支撑的博客、文章
+- 特点：系统化、有结构、适合新手
+
+**AIDA Model**: Attention → Interest → Desire → Action
+- 适合：销售文案、广告、邮件营销
+- 特点：说服导向、转化驱动
+
+**Storytelling Framework**: Setup → Conflict → Journey → Climax → Resolution
+- 适合：品牌故事、案例、人物特写
+- 特点：情感驱动、叙事结构
+
+**Content Writing Process**: Planning → Research → Writing → Editing → Publishing
+- 适合：SEO长文、深度指南、白皮书
+- 特点：完整流程、专业级
+
+**Content Creation Techniques**: 20种实用技巧灵活组合
+- 适合：日常社媒、多平台内容、快速迭代
+- 特点：轻量灵活、即用即走
+
+**High-Value Content Strategies**: 12种高价值内容策略
+- 适合：高竞争市场、需要差异化
+- 特点：策略导向、强调 ROI
+
+### Step 3: 风格验证（如有风格要求）
+
+创作完成后，对照风格约束清单检查：
+
+\`\`\`markdown
+**风格匹配检查**
+| 约束 | 要求 | 实际 | ✓/✗ |
+|------|------|------|-----|
+| 语气 | 轻松 | 轻松 | ✓ |
+| 句式 | 短句为主 | 短句为主 | ✓ |
+| ... | ... | ... | ... |
+
+[如有不匹配项，修正后再输出]
+\`\`\`
+
+### 最终输出格式
+
+\`\`\`markdown
+# [标题]
+
+[正文内容]
+
+---
+
+**创作信息**
+- 方法论：[使用的方法论]
+- 字数：约 X 字
+- 素材：[使用了 X 条素材 / 无需外部素材]
+- 风格：[匹配 XX 风格 / 无特定风格要求]
+
+需要调整请告诉我。
+\`\`\`
+
+---
+
+## 关键原则
+
+### 不要做
+- ❌ 简单任务走复杂流程
+- ❌ 用户没要求就主动问"要不要参考风格"
+- ❌ 为了用方法论而用方法论
+- ❌ 输出冗长的分析过程（用户要的是结果）
+
+### 要做
+- ✅ 快速理解，有疑问直接问
+- ✅ 简单任务直接写
+- ✅ 方法论是指导，不是束缚
+- ✅ 风格约束要真的约束创作，不是装饰
+- ✅ 用户要改就改，不解释为什么"原来的也挺好"
+
+---
+
+## 迭代协议
+
+用户要求修改时：
+
+| 修改类型 | 处理方式 |
+|----------|----------|
+| 小改（词句调整） | 直接改，不废话 |
+| 中改（段落/结构调整） | 改完说明改了什么 |
+| 大改（方向/风格调整） | 确认新方向，重写相关部分 |
+| 全部重来 | 确认新需求，从 Phase 1 开始 |
+`,
+}
+
 export function createBuiltinSkills(): BuiltinSkill[] {
-  return [playwrightSkill, superAnalystSkill]
+  return [playwrightSkill, superAnalystSkill, superWriterSkill]
 }
