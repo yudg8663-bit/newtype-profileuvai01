@@ -190,6 +190,12 @@ export function createDeputyAgent(
     return { ...base, reasoningEffort: "medium" } as AgentConfig
   }
 
+  // GitHub Copilot proxied Claude doesn't support native extended thinking API
+  if (model.startsWith("github-copilot/claude-")) {
+    return base
+  }
+
+  // Only direct Anthropic models get extended thinking
   return {
     ...base,
     thinking: { type: "enabled", budgetTokens: 32000 },
