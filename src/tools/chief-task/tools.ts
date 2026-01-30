@@ -133,10 +133,15 @@ function resolveCategoryConfig(
   return { config, promptAppend }
 }
 
+export interface AgentModelConfig {
+  model?: string
+}
+
 export interface ChiefTaskToolOptions {
   manager: BackgroundManager
   client: OpencodeClient
   userCategories?: CategoriesConfig
+  agentModels?: Record<string, AgentModelConfig>
 }
 
 export interface BuildSystemContentInput {
@@ -159,7 +164,7 @@ export function buildSystemContent(input: BuildSystemContentInput): string | und
 }
 
 export function createChiefTask(options: ChiefTaskToolOptions): ToolDefinition {
-  const { manager, client, userCategories } = options
+  const { manager, client, userCategories, agentModels } = options
 
   return tool({
     description: CHIEF_TASK_DESCRIPTION,
@@ -338,6 +343,11 @@ ${textContent || "(No text output)"}`
         const mappedCategory = AGENT_TO_CATEGORY_MAP[agentToUse]
         if (mappedCategory) {
           categoryPromptAppend = CATEGORY_PROMPT_APPENDS[mappedCategory]
+        }
+
+        const agentModelConfig = agentModels?.[agentToUse]
+        if (agentModelConfig?.model) {
+          categoryModel = parseModelString(agentModelConfig.model)
         }
 
         // Validate agent exists and is callable (not a primary agent)

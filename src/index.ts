@@ -240,10 +240,12 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   const backgroundTools = createBackgroundTools(backgroundManager, ctx.client);
 
   const lookAt = createLookAt(ctx);
+  const agentModels = pluginConfig.agents as Record<string, { model?: string }> | undefined;
   const chiefTask = createChiefTask({
     manager: backgroundManager,
     client: ctx.client,
     userCategories: pluginConfig.categories,
+    agentModels,
   });
   const disabledSkills = new Set(pluginConfig.disabled_skills ?? []);
   const systemMcpNames = getSystemMcpServerNames();
