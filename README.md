@@ -356,6 +356,33 @@ Use `/memory-consolidate` to manually trigger memory consolidation (normally aut
 }
 ```
 
+## Startup Config Checker (v1.0.43+)
+
+On first startup, newtype-profile automatically checks your agent model configuration and guides you through setup if needed.
+
+### How It Works
+
+1. **Auto-detect**: When OpenCode starts, the plugin checks if agents have model configurations
+2. **Smart Fallback**: If no explicit config exists but OpenCode has a default model, all agents use that model
+3. **Interactive Setup**: If configuration is missing, Chief will ask how you want to proceed:
+   - **Auto-configure**: Let Chief set up models based on available providers
+   - **Manual configure**: Get the config file path to edit yourself
+   - **Skip**: Use current configuration (may use OpenCode default model)
+
+### Configuration Status
+
+The plugin distinguishes between:
+- **Critical agents** (chief, deputy): Must have a model to function
+- **Specialist agents** (researcher, writer, etc.): Can use OpenCode default model
+
+### Disable Startup Check
+
+```json
+{
+  "disabled_hooks": ["startup-config-checker"]
+}
+```
+
 ## Switch Between Plugins
 
 Use the `/switch` command to switch between OpenCode plugins:

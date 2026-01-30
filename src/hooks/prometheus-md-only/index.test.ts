@@ -61,7 +61,7 @@ describe("prometheus-md-only", () => {
       ).rejects.toThrow("can only write/edit .md files")
     })
 
-    test("should allow Prometheus to write .md files inside .sisyphus/", async () => {
+    test("should allow Prometheus to write .md files inside .chief/", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -70,7 +70,7 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { filePath: "/project/.sisyphus/plans/work-plan.md" },
+        args: { filePath: "/project/.chief/plans/work-plan.md" },
       }
 
       // #when / #then
@@ -79,7 +79,7 @@ describe("prometheus-md-only", () => {
       ).resolves.toBeUndefined()
     })
 
-    test("should block Prometheus from writing .md files outside .sisyphus/", async () => {
+    test("should block Prometheus from writing .md files outside .chief/", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -94,7 +94,7 @@ describe("prometheus-md-only", () => {
       // #when / #then
       await expect(
         hook["tool.execute.before"](input, output)
-      ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
+      ).rejects.toThrow("can only write/edit .md files inside .chief/")
     })
 
     test("should block Edit tool for non-.md files", async () => {

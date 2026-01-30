@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
-
 export const ARCHIVIST_PROMPT_METADATA: AgentPromptMetadata = {
   category: "exploration",
   cost: "CHEAP",
@@ -18,7 +16,7 @@ export const ARCHIVIST_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createArchivistAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "bash",
@@ -29,7 +27,7 @@ export function createArchivistAgent(
     description:
       "Knowledge base specialist with exceptional pattern recognition. Finds relevant materials, discovers hidden connections, and organizes assets. Thinks in links and associations.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.3,
     ...restrictions,
     prompt: `<Role>

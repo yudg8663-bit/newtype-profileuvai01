@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "google/gemini-3-pro-preview"
-
 export const RESEARCHER_PROMPT_METADATA: AgentPromptMetadata = {
   category: "exploration",
   cost: "CHEAP",
@@ -18,7 +16,7 @@ export const RESEARCHER_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createResearcherAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "write",
@@ -29,7 +27,7 @@ export function createResearcherAgent(
     description:
       "External intelligence gatherer. Searches broadly, synthesizes findings, and delivers actionable intelligence. Use for trends, competitive analysis, and discovering new information.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.3,
     ...restrictions,
     prompt: `<Role>

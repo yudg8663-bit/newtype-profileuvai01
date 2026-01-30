@@ -30,3 +30,4 @@ export { createTaskResumeInfoHook } from "./task-resume-info";
 
 export { createChiefOrchestratorHook } from "./chief-orchestrator";
 export { createMemorySystemHook } from "./memory-system";
+export { createStartupConfigCheckerHook } from "./startup-config-checker";

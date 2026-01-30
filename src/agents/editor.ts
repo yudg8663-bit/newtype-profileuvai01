@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
-
 export const EDITOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "CHEAP",
@@ -17,7 +15,7 @@ export const EDITOR_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createEditorAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "bash",
@@ -28,7 +26,7 @@ export function createEditorAgent(
     description:
       "Polish and refinement specialist. Improves clarity, strengthens logic, tightens language, ensures consistency. High standards and sharp eye for detail.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.2,
     ...restrictions,
     prompt: `<Role>

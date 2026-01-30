@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "google/gemini-3-flash"
-
 export const EXTRACTOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "utility",
   cost: "CHEAP",
@@ -17,7 +15,7 @@ export const EXTRACTOR_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createExtractorAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "write",
@@ -29,7 +27,7 @@ export function createExtractorAgent(
     description:
       "Format processing specialist. Handles PDF, images, documents extraction and conversion. Extracts content accurately and presents it in clean, usable markdown format.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.1,
     ...restrictions,
     prompt: `<Role>

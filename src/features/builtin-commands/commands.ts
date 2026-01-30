@@ -4,6 +4,7 @@ import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { SWITCH_PLUGIN_TEMPLATE } from "./templates/switch-plugin"
 import { MEMORY_CONSOLIDATE_TEMPLATE } from "./templates/memory-consolidate"
+import { CONFIGURE_MODELS_TEMPLATE } from "./templates/configure-models"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
@@ -71,6 +72,12 @@ $ARGUMENTS
     description: "(builtin) Consolidate daily memory logs into MEMORY.md",
     template: `<command-instruction>
 ${MEMORY_CONSOLIDATE_TEMPLATE}
+</command-instruction>`,
+  },
+  "configure-models": {
+    description: "(builtin) Configure Agent models based on available providers",
+    template: `<command-instruction>
+${CONFIGURE_MODELS_TEMPLATE}
 </command-instruction>`,
   },
 }

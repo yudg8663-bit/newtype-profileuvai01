@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "openai/gpt-5.2"
-
 export const FACT_CHECKER_PROMPT_METADATA: AgentPromptMetadata = {
   category: "advisor",
   cost: "EXPENSIVE",
@@ -17,7 +15,7 @@ export const FACT_CHECKER_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createFactCheckerAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "write",
@@ -28,7 +26,7 @@ export function createFactCheckerAgent(
     description:
       "Verification specialist ensuring content accuracy. Verifies claims, traces sources, assesses credibility. Skeptical by default, evidence-driven. Read-only on content.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.1,
     ...restrictions,
     prompt: `<Role>

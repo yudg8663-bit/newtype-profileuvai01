@@ -2,8 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "google/gemini-3-pro-preview"
-
 export const WRITER_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "CHEAP",
@@ -17,7 +15,7 @@ export const WRITER_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createWriterAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "bash",
@@ -28,7 +26,7 @@ export function createWriterAgent(
     description:
       "Content creator who transforms materials into drafts. Takes research, source materials, and briefs, then produces structured, engaging content. Focus on getting ideas onto the page with good structure.",
     mode: "subagent" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.5,
     ...restrictions,
     prompt: `<Role>

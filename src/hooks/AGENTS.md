@@ -31,6 +31,7 @@ hooks/
 ├── session-recovery/           # Recover from errors (432 lines)
 ├── sisyphus-orchestrator/      # Main orchestration hook (660 lines)
 ├── start-work/                 # Initialize Sisyphus work session
+├── startup-config-checker/     # Check agent config on startup, prompt for setup
 ├── task-resume-info/           # Track task resume state
 ├── think-mode/                 # Auto-detect thinking triggers
 ├── thinking-block-validator/   # Validate thinking block format

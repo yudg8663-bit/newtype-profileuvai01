@@ -134,31 +134,24 @@ Approach:
 
 export const DEFAULT_CATEGORIES: Record<string, CategoryConfig> = {
   research: {
-    model: "google/antigravity-gemini-3-flash",
     temperature: 0.5,
   },
   "fact-check": {
-    model: "google/antigravity-gemini-3-flash",
     temperature: 0.2,
   },
   archive: {
-    model: "google/antigravity-claude-sonnet-4-5",
     temperature: 0.3,
   },
   writing: {
-    model: "google/antigravity-gemini-3-pro-high",
     temperature: 0.7,
   },
   editing: {
-    model: "google/antigravity-claude-sonnet-4-5",
     temperature: 0.3,
   },
   extraction: {
-    model: "google/antigravity-gemini-3-flash",
     temperature: 0.2,
   },
   quick: {
-    model: "google/antigravity-gemini-3-flash",
     temperature: 0.3,
   },
 }

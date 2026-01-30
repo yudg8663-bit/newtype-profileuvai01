@@ -76,7 +76,8 @@
           "edit-error-recovery",
           "prometheus-md-only",
           "chief-orchestrator",
-          "memory-system"
+          "memory-system",
+          "startup-config-checker"
         ]
       }
     },
@@ -1274,10 +1275,7 @@
           "prompt_append": {
             "type": "string"
           }
-        },
-        "required": [
-          "model"
-        ]
+        }
       }
     },
     "claude_code": {

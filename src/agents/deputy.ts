@@ -136,7 +136,6 @@ export function createDeputyAgent(
   promptAppend?: string
 ): AgentConfig {
   const prompt = buildDeputyPrompt(promptAppend)
-  const model = categoryConfig.model
 
   const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
   const mergedConfig = migrateAgentConfig({
@@ -148,7 +147,7 @@ export function createDeputyAgent(
     description:
       "Deputy - 副主编，执行主编委派的具体任务，不能再委派。",
     mode: "subagent" as const,
-    model,
+    ...(categoryConfig.model ? { model: categoryConfig.model } : {}),
     maxTokens: categoryConfig.maxTokens ?? 64000,
     prompt,
     color: "#20B2AA",
@@ -174,16 +173,19 @@ export function createDeputyAgent(
     } as AgentConfig
   }
 
-  if (isGptModel(model)) {
+  const model = categoryConfig.model
+  if (model && isGptModel(model)) {
     return { ...base, reasoningEffort: "medium" } as AgentConfig
   }
 
-  // GitHub Copilot proxied Claude doesn't support native extended thinking API
-  if (model.startsWith("github-copilot/claude-")) {
+  if (model?.startsWith("github-copilot/claude-")) {
     return base
   }
 
-  // Only direct Anthropic models get extended thinking
+  if (!model) {
+    return base
+  }
+
   return {
     ...base,
     thinking: { type: "enabled", budgetTokens: 32000 },

@@ -17,7 +17,6 @@ function resolveCategoryConfig(
   const config: CategoryConfig = {
     ...defaultConfig,
     ...userConfig,
-    model: userConfig?.model ?? defaultConfig?.model ?? "anthropic/claude-sonnet-4-5",
   }
 
   let promptAppend = defaultPromptAppend
@@ -32,23 +31,23 @@ function resolveCategoryConfig(
 
 describe("chief-task", () => {
   describe("DEFAULT_CATEGORIES", () => {
-    test("research category has gemini model", () => {
+    test("research category has temperature only (no hardcoded model)", () => {
       // #given
       const category = DEFAULT_CATEGORIES["research"]
 
       // #when / #then
       expect(category).toBeDefined()
-      expect(category.model).toBe("google/antigravity-gemini-3-pro-high")
+      expect(category.model).toBeUndefined()
       expect(category.temperature).toBe(0.5)
     })
 
-    test("writing category has gemini model", () => {
+    test("writing category has temperature only (no hardcoded model)", () => {
       // #given
       const category = DEFAULT_CATEGORIES["writing"]
 
       // #when / #then
       expect(category).toBeDefined()
-      expect(category.model).toBe("google/antigravity-gemini-3-pro-high")
+      expect(category.model).toBeUndefined()
       expect(category.temperature).toBe(0.7)
     })
   })
@@ -96,15 +95,16 @@ describe("chief-task", () => {
   })
 
   describe("CHIEF_TASK_DESCRIPTION", () => {
-    test("documents background parameter as required with default false", () => {
+    test("documents background parameter", () => {
       // #given / #when / #then
       expect(CHIEF_TASK_DESCRIPTION).toContain("background")
-      expect(CHIEF_TASK_DESCRIPTION).toContain("Default: false")
+      expect(CHIEF_TASK_DESCRIPTION).toContain("run_in_background")
     })
 
-    test("documents parallel research usage", () => {
+    test("documents agent types", () => {
       // #given / #when / #then
-      expect(CHIEF_TASK_DESCRIPTION).toContain("parallel")
+      expect(CHIEF_TASK_DESCRIPTION).toContain("researcher")
+      expect(CHIEF_TASK_DESCRIPTION).toContain("writer")
     })
   })
 
@@ -120,7 +120,7 @@ describe("chief-task", () => {
       expect(result).toBeNull()
     })
 
-    test("returns default config for builtin category", () => {
+    test("returns default config for builtin category (no model)", () => {
       // #given
       const categoryName = "research"
 
@@ -129,7 +129,7 @@ describe("chief-task", () => {
 
       // #then
       expect(result).not.toBeNull()
-      expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
+      expect(result!.config.model).toBeUndefined()
       expect(result!.promptAppend).toContain("RESEARCH")
     })
 

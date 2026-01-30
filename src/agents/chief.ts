@@ -5,16 +5,6 @@ import {
   migrateAgentConfig,
 } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
-
-/**
- * Chief 允许使用的工具白名单
- *
- * 三层架构的关键硬约束：使用白名单而非黑名单
- * - 只有明确列出的工具可以使用
- * - 任何未列出的工具（包括用户安装的 MCP）都会被阻止
- * - 强制 Chief 通过 `chief_task` 委派执行任务给 Deputy
- */
 const CHIEF_ALLOWED_TOOLS = [
   // ========== 唯一的执行路径 ==========
   "chief_task",
@@ -73,7 +63,7 @@ export const CHIEF_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createChiefAgent(
-  model: string = DEFAULT_MODEL
+  model?: string
 ): AgentConfig {
   const baseRestrictions = createAgentToolAllowlist(CHIEF_ALLOWED_TOOLS)
   const mergedConfig = migrateAgentConfig({
@@ -326,7 +316,7 @@ When analyzing problems:
     description:
       "Chief - thought partner for exploration, coordinator for execution. Opinionated, direct, challenges flawed thinking.",
     mode: "primary" as const,
-    model,
+    ...(model ? { model } : {}),
     temperature: 0.3,
     prompt,
     ...mergedConfig,

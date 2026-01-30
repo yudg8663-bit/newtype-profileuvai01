@@ -3,14 +3,14 @@ import { createBuiltinAgents } from "./utils"
 import type { AgentConfig } from "@opencode-ai/sdk"
 
 describe("createBuiltinAgents with model overrides", () => {
-  test("chief with default model", () => {
+  test("chief without model when no override", () => {
     // #given - no overrides
 
     // #when
     const agents = createBuiltinAgents()
 
-    // #then
-    expect(agents.chief.model).toBe("anthropic/claude-opus-4-5")
+    // #then - model is undefined, OpenCode will use global default
+    expect(agents.chief.model).toBeUndefined()
   })
 
   test("chief with GPT model override", () => {
@@ -37,14 +37,14 @@ describe("createBuiltinAgents with model overrides", () => {
     expect(agents.chief.model).toBe("openai/gpt-5.2")
   })
 
-  test("researcher with default model", () => {
+  test("researcher without model when no override", () => {
     // #given - no overrides
 
     // #when
     const agents = createBuiltinAgents()
 
-    // #then
-    expect(agents.researcher.model).toBe("google/gemini-3-pro-preview")
+    // #then - model is undefined, OpenCode will use global default
+    expect(agents.researcher.model).toBeUndefined()
   })
 
   test("researcher with Claude model override", () => {
@@ -91,8 +91,8 @@ describe("buildAgent with category and skills", () => {
     // #when
     const agent = buildAgent(source["test-agent"])
 
-    // #then
-    expect(agent.model).toBe("google/antigravity-gemini-3-pro-high")
+    // #then - model is undefined (uses OpenCode default), only temperature from category
+    expect(agent.model).toBeUndefined()
     expect(agent.temperature).toBe(0.5)
   })
 
@@ -190,8 +190,8 @@ describe("buildAgent with category and skills", () => {
     // #when
     const agent = buildAgent(source["test-agent"])
 
-    // #then
-    expect(agent.model).toBe("google/antigravity-gemini-3-pro-high")
+    // #then - model is undefined (uses OpenCode default), temperature from category
+    expect(agent.model).toBeUndefined()
     expect(agent.temperature).toBe(0.7)
     expect(agent.prompt).toContain("Playwright Browser Automation")
     expect(agent.prompt).toContain("Task description")

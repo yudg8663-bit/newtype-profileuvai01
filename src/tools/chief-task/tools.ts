@@ -120,7 +120,7 @@ function resolveCategoryConfig(
   const config: CategoryConfig = {
     ...defaultConfig,
     ...userConfig,
-    model: userConfig?.model ?? defaultConfig?.model ?? "google/antigravity-claude-sonnet-4-5",
+    model: userConfig?.model ?? defaultConfig?.model,
   }
 
   let promptAppend = defaultPromptAppend
@@ -331,7 +331,7 @@ ${textContent || "(No text output)"}`
         }
 
         agentToUse = DEPUTY_AGENT
-        categoryModel = parseModelString(resolved.config.model)
+        categoryModel = resolved.config.model ? parseModelString(resolved.config.model) : undefined
         categoryPromptAppend = resolved.promptAppend || undefined
       } else {
         agentToUse = args.subagent_type!.trim()

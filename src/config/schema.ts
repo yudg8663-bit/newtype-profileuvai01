@@ -82,6 +82,7 @@ export const HookNameSchema = z.enum([
   "prometheus-md-only",
   "chief-orchestrator",
   "memory-system",
+  "startup-config-checker",
 ])
 
 export const BuiltinCommandNameSchema = z.enum([
@@ -140,7 +141,7 @@ export const ChiefAgentConfigSchema = z.object({
 })
 
 export const CategoryConfigSchema = z.object({
-  model: z.string(),
+  model: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   top_p: z.number().min(0).max(1).optional(),
   maxTokens: z.number().optional(),

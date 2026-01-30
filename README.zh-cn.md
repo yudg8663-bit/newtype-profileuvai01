@@ -356,6 +356,33 @@ newtype-profile 内置了跨会话记忆系统，自动保存重要信息：
 }
 ```
 
+## 启动配置检查 (v1.0.43+)
+
+首次启动时，newtype-profile 会自动检查 Agent 模型配置，并在需要时引导你完成设置。
+
+### 工作原理
+
+1. **自动检测**：OpenCode 启动时，插件检查各 Agent 是否有模型配置
+2. **智能回退**：如果没有显式配置但 OpenCode 有默认模型，所有 Agent 使用该默认模型
+3. **交互式设置**：如果配置缺失，Chief 会询问你想如何处理：
+   - **自动配置**：让 Chief 根据可用的 Provider 自动设置模型
+   - **手动配置**：获取配置文件路径，自己编辑
+   - **跳过**：使用当前配置（可能使用 OpenCode 默认模型）
+
+### 配置状态
+
+插件区分：
+- **核心 Agent**（chief, deputy）：必须有模型才能工作
+- **专业 Agent**（researcher, writer 等）：可以使用 OpenCode 默认模型
+
+### 禁用启动检查
+
+```json
+{
+  "disabled_hooks": ["startup-config-checker"]
+}
+```
+
 ## 插件切换
 
 使用 `/switch` 命令在 OpenCode 插件之间切换：

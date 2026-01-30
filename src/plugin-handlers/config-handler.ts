@@ -133,9 +133,9 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       };
 
       const agentsConfig = pluginConfig.agents as Record<string, { model?: string }> | undefined;
-      const deputyModel = agentsConfig?.deputy?.model ?? "google/antigravity-claude-sonnet-4-5";
+      const deputyModel = agentsConfig?.deputy?.model;
       agentConfig["deputy"] = createDeputyAgent({
-        model: deputyModel,
+        ...(deputyModel ? { model: deputyModel } : {}),
         temperature: 0.1,
       });
 

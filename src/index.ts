@@ -30,6 +30,7 @@ import {
   createChiefOrchestratorHook,
   createPrometheusMdOnlyHook,
   createMemorySystemHook,
+  createStartupConfigCheckerHook,
 } from "./hooks";
 import { setConfidenceConfig } from "./hooks/chief-orchestrator/confidence-router";
 import {
@@ -212,6 +213,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createMemorySystemHook(ctx)
     : null;
 
+  const startupConfigChecker = isHookEnabled("startup-config-checker")
+    ? createStartupConfigCheckerHook(ctx, pluginConfig)
+    : null;
+
   const taskResumeInfo = createTaskResumeInfoHook();
 
   const backgroundManager = new BackgroundManager(ctx);
@@ -389,6 +394,13 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       ]?.(input, output as any);
     },
 
+    "experimental.chat.system.transform": async (
+      input: { sessionID?: string },
+      output: { system: string[] }
+    ) => {
+      await startupConfigChecker?.["experimental.chat.system.transform"]?.(input, output);
+    },
+
     config: configHandler,
 
     event: async (input) => {
@@ -409,6 +421,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await ralphLoop?.event(input);
       await chiefOrchestrator?.handler(input);
       await memorySystem?.event(input);
+      await startupConfigChecker?.event(input);
 
       const { event } = input;
       const props = event.properties as Record<string, unknown> | undefined;
