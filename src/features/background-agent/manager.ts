@@ -125,6 +125,7 @@ export class BackgroundManager {
         agent: input.agent,
         system: input.skillContent,
         parts: [{ type: "text", text: input.prompt }],
+        ...(input.model ? { model: input.model } : {}),
       },
     }).catch((error) => {
       log("[background-agent] promptAsync error:", error)

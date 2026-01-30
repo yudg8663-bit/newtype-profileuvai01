@@ -449,15 +449,14 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
           metadata: { sessionId: sessionID, category: args.category, sync: true },
         })
 
-        // Use promptAsync to avoid changing main session's active state
         let promptError: Error | undefined
         await client.session.promptAsync({
           path: { id: sessionID },
           body: {
             agent: agentToUse,
-            model: categoryModel,
             system: systemContent,
             parts: [{ type: "text", text: args.prompt }],
+            ...(categoryModel ? { model: categoryModel } : {}),
           },
         }).catch((error) => {
           promptError = error instanceof Error ? error : new Error(String(error))
@@ -507,9 +506,9 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
             path: { id: sessionID },
             body: {
               agent: agentToUse,
-              model: categoryModel,
               system: systemContent,
               parts: [{ type: "text", text: qualityResult.improvementPrompt! }],
+              ...(categoryModel ? { model: categoryModel } : {}),
             },
           }).catch((error) => {
             retryError = error instanceof Error ? error : new Error(String(error))

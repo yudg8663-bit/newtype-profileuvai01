@@ -38,6 +38,7 @@ export const BuiltinSkillNameSchema = z.enum([
 
 export const OverridableAgentNameSchema = z.enum([
   "build",
+  "deputy",
   "plan",
   "chief",
   "researcher",
@@ -116,6 +117,7 @@ export const AgentOverrideConfigSchema = z.object({
 
 export const AgentOverridesSchema = z.object({
   build: AgentOverrideConfigSchema.optional(),
+  deputy: AgentOverrideConfigSchema.optional(),
   plan: AgentOverrideConfigSchema.optional(),
   chief: AgentOverrideConfigSchema.optional(),
   researcher: AgentOverrideConfigSchema.optional(),
