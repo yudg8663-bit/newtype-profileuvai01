@@ -322,17 +322,23 @@ Chief 使用 `chief_task` 按分类委派任务：
 - ✅ **AST-Grep**: 代码模式搜索
 - ✅ **MCP 支持**: 扩展能力
 
-## 记忆系统 (v1.0.41+)
+## 记忆系统 (v1.0.41+, v1.0.50 改进)
 
 newtype-profile 内置了跨会话记忆系统，自动保存重要信息：
 
 ### 工作原理
 
-1. **自动保存**：对话结束时（session.idle），关键信息被提取并保存到 `.opencode/memory/YYYY-MM-DD.md`
-2. **完整对话**：每个 session 的全文日志保存到 `.opencode/memory/full/<sessionID>.md`（覆盖写）
-3. **自动归档**：超过 7 天的日志自动合并到 `.opencode/MEMORY.md`
-4. **深度摘要**：当日记含 Decisions/TODOs 或标签（#project/#preference/#policy/#important）时，archivist 会后台读取全文生成深度摘要
-5. **AI 感知**：Chief 知道记忆系统的存在，需要时会主动查询
+1. **自动保存**：对话结束时（session.idle），archivist agent 生成智能摘要并保存到 `.opencode/memory/YYYY-MM-DD.md`
+2. **智能过滤**：系统指令（如 `[search-mode]`、`[analyze-mode]`）会被自动过滤——只保存真实的用户问题和有意义的回复
+3. **LLM 驱动摘要**：不再使用正则表达式提取，而是由 archivist agent 理解上下文并提取：
+   - **Topic**：清晰、具体的对话主题描述
+   - **Key Points**：完整的要点，不会被截断
+   - **Decisions**：对话中做出的任何决定
+   - **Tags**：相关话题标签，便于检索
+4. **完整对话**：每个 session 的全文日志保存到 `.opencode/memory/full/<sessionID>.md`（覆盖写）
+5. **自动归档**：超过 7 天的日志自动合并到 `.opencode/MEMORY.md`
+6. **深度摘要**：归档时，archivist agent 会读取完整对话进行深度总结
+7. **AI 感知**：Chief 知道记忆系统的存在，需要时会主动查询
 
 ### 文件结构
 
@@ -341,7 +347,7 @@ newtype-profile 内置了跨会话记忆系统，自动保存重要信息：
 └── .opencode/
     ├── MEMORY.md              # 长期记忆（含深度摘要）
     └── memory/
-        ├── 2026-01-29.md      # 每日摘要
+        ├── 2026-01-29.md      # 每日摘要（LLM 生成）
         ├── 2026-01-28.md      # 每日摘要
         ├── full/
         │   ├── ses_xxxx.md    # 每个 session 的完整记录

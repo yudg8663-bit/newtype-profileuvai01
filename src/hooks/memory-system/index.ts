@@ -7,7 +7,13 @@ import {
   archiveOldMemories,
   saveFullTranscript,
 } from "./storage"
-import { extractSessionSummary } from "./extractor"
+import {
+  prepareMessagesForSummary,
+  formatTranscriptForLLM,
+  generateSummaryPrompt,
+  parseLLMSummary,
+  extractSessionSummaryFallback,
+} from "./extractor"
 import { log } from "../../shared/logger"
 import { getMainSessionID, subagentSessions } from "../../features/claude-code-session-state"
 
@@ -215,11 +221,36 @@ export function createMemorySystemHook(ctx: PluginInput) {
       })
 
       const messages = (resp.data ?? resp) as MessageWrapper[]
-
-      const entry = extractSessionSummary(sessionID, messages)
       const fullTranscript = extractFullTranscript(messages)
-      const success = appendMemoryEntry(ctx.directory, entry)
       const fullSuccess = saveFullTranscript(ctx.directory, sessionID, fullTranscript)
+
+      const preparedMessages = prepareMessagesForSummary(messages)
+
+      if (preparedMessages.length === 0) {
+        log(`[${HOOK_NAME}] No meaningful content after filtering`, { sessionID })
+        state.saved = true
+        return
+      }
+
+      const transcript = formatTranscriptForLLM(preparedMessages)
+      const summaryPrompt = generateSummaryPrompt(transcript)
+
+      let entry = null
+      const llmSummary = await runArchivistSummary(summaryPrompt)
+
+      if (llmSummary) {
+        entry = parseLLMSummary(sessionID, llmSummary)
+        if (entry) {
+          log(`[${HOOK_NAME}] LLM summary generated`, { sessionID })
+        }
+      }
+
+      if (!entry) {
+        log(`[${HOOK_NAME}] Using fallback extraction`, { sessionID })
+        entry = extractSessionSummaryFallback(sessionID, messages)
+      }
+
+      const success = appendMemoryEntry(ctx.directory, entry)
 
       if (success && fullSuccess) {
         state.saved = true
@@ -227,6 +258,7 @@ export function createMemorySystemHook(ctx: PluginInput) {
           sessionID,
           messageCount: messages.length,
           keyPoints: entry.keyPoints.length,
+          usedLLM: llmSummary !== null,
         })
 
         await checkAndArchive()

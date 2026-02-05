@@ -322,17 +322,23 @@ This project retains core capabilities from oh-my-opencode:
 - ✅ **AST-Grep**: Code pattern search
 - ✅ **MCP Support**: Extended capabilities
 
-## Memory System (v1.0.41+)
+## Memory System (v1.0.41+, improved in v1.0.50)
 
 newtype-profile includes an automatic memory system for cross-session knowledge persistence:
 
 ### How It Works
 
-1. **Auto-save**: When a conversation ends (session.idle), key information is extracted and saved to `.opencode/memory/YYYY-MM-DD.md`
-2. **Full transcript**: A complete conversation log is stored in `.opencode/memory/full/<sessionID>.md` (overwrites per session)
-3. **Auto-archive**: Logs older than 7 days are consolidated into `.opencode/MEMORY.md`
-4. **Deep summaries**: If a daily entry includes Decisions/TODOs or tags (#project/#preference/#policy/#important), the archivist agent summarizes the full transcript in background
-5. **AI Awareness**: Chief knows about the memory system and can query it when needed
+1. **Auto-save**: When a conversation ends (session.idle), the archivist agent generates an intelligent summary and saves it to `.opencode/memory/YYYY-MM-DD.md`
+2. **Smart Filtering**: System instructions (like `[search-mode]`, `[analyze-mode]`) are automatically filtered out - only real user questions and meaningful responses are saved
+3. **LLM-Powered Summaries**: Instead of regex-based extraction, the archivist agent understands context and extracts:
+   - **Topic**: A clear, specific description of what was discussed
+   - **Key Points**: Complete thoughts, not truncated snippets
+   - **Decisions**: Any decisions made during the conversation
+   - **Tags**: Relevant topic tags for searchability
+4. **Full transcript**: A complete conversation log is stored in `.opencode/memory/full/<sessionID>.md` (overwrites per session)
+5. **Auto-archive**: Logs older than 7 days are consolidated into `.opencode/MEMORY.md`
+6. **Deep summaries**: When archiving, the archivist agent reads full transcripts for deeper summarization
+7. **AI Awareness**: Chief knows about the memory system and can query it when needed
 
 ### File Structure
 
@@ -341,7 +347,7 @@ your-project/
 └── .opencode/
     ├── MEMORY.md              # Long-term memory (archived + deep summaries)
     └── memory/
-        ├── 2026-01-29.md      # Daily summaries
+        ├── 2026-01-29.md      # Daily summaries (LLM-generated)
         ├── 2026-01-28.md      # Daily summaries
         ├── full/
         │   ├── ses_xxxx.md    # Full transcript per session

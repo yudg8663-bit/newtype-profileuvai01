@@ -15,6 +15,18 @@ interface MessageWrapper {
   parts: MessagePart[]
 }
 
+/** System instruction patterns to filter out from memory */
+const SYSTEM_INSTRUCTION_PATTERNS = [
+  /^\[search-mode\]/i,
+  /^\[analyze-mode\]/i,
+  /^\[write-mode\]/i,
+  /^\[edit-mode\]/i,
+  /^MAXIMIZE SEARCH EFFORT/i,
+  /^ANALYSIS MODE\./i,
+  /^chief_task\(/i,
+  /^delegate to deputy/i,
+]
+
 function extractTextFromParts(parts: MessagePart[]): string {
   return parts
     .filter((p) => p.type === "text" && p.text)
@@ -22,94 +34,179 @@ function extractTextFromParts(parts: MessagePart[]): string {
     .join("\n")
 }
 
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + "..."
+/** Check if a message looks like a system instruction rather than user content */
+function isSystemInstruction(text: string): boolean {
+  const trimmed = text.trim()
+  return SYSTEM_INSTRUCTION_PATTERNS.some((pattern) => pattern.test(trimmed))
 }
 
-export function extractSessionSummary(
-  sessionID: string,
+/** Filter and prepare messages for LLM summarization */
+export function prepareMessagesForSummary(
   messages: MessageWrapper[]
-): MemoryEntry {
-  const userMessages: string[] = []
-  const assistantMessages: string[] = []
-  const tags: string[] = []
+): { role: string; text: string }[] {
+  const result: { role: string; text: string }[] = []
 
   for (const msg of messages) {
     const text = extractTextFromParts(msg.parts)
     if (!text.trim()) continue
 
-    const tagMatches = text.matchAll(/#([a-zA-Z][\w-]{1,30})/g)
-    for (const match of tagMatches) {
-      const tag = match[1]?.toLowerCase()
-      if (tag) tags.push(`#${tag}`)
+    // Skip system instructions
+    if (msg.info.role === "user" && isSystemInstruction(text)) {
+      continue
     }
 
-    if (msg.info.role === "user") {
-      userMessages.push(truncateText(text, 500))
-    } else if (msg.info.role === "assistant") {
-      assistantMessages.push(truncateText(text, 500))
-    }
+    result.push({
+      role: msg.info.role,
+      text: text.trim(),
+    })
   }
 
+  return result
+}
+
+/** Format prepared messages into a transcript string for LLM */
+export function formatTranscriptForLLM(
+  messages: { role: string; text: string }[]
+): string {
+  return messages
+    .map((m) => `## ${m.role.toUpperCase()}\n${m.text}`)
+    .join("\n\n---\n\n")
+}
+
+/** Generate the prompt for archivist to create a memory summary */
+export function generateSummaryPrompt(transcript: string): string {
+  return `将以下对话总结为记忆条目。
+
+规则：
+- 只输出 Markdown，不要有其他内容
+- 关注：用户的实际问题、达成的结论、做出的决定
+- 忽略：系统指令、工具调用细节、中间过程
+- 如果对话没有有价值的内容，只返回 "NO_VALUABLE_CONTENT"
+
+输出格式（严格遵循）：
+**Topic:** [一句话描述对话主题，要具体，不要太抽象]
+
+**Key Points:**
+- [关键要点1，完整表达，不要截断]
+- [关键要点2]
+- [更多要点如有]
+
+**Decisions:** (如有决定)
+- [决定1]
+
+**Tags:** (如有相关标签，用 #tag 格式)
+- #tag1
+- #tag2
+
+---
+
+对话内容：
+
+${transcript}`
+}
+
+/** Parse LLM-generated summary into MemoryEntry structure */
+export function parseLLMSummary(
+  sessionID: string,
+  llmOutput: string
+): MemoryEntry | null {
+  if (!llmOutput || llmOutput.includes("NO_VALUABLE_CONTENT")) {
+    return null
+  }
+
+  const summary = llmOutput.trim()
+
+  // Extract tags from the summary
+  const tags: string[] = []
+  const tagMatches = summary.matchAll(/#([a-zA-Z][\w-]{1,30})/g)
+  for (const match of tagMatches) {
+    const tag = match[1]?.toLowerCase()
+    if (tag) tags.push(`#${tag}`)
+  }
+
+  // Extract key points
   const keyPoints: string[] = []
+  const keyPointsMatch = summary.match(/\*\*Key Points:\*\*\n([\s\S]*?)(?=\n\*\*|$)/)
+  if (keyPointsMatch) {
+    const points = keyPointsMatch[1]
+      .split("\n")
+      .filter((line) => line.trim().startsWith("-"))
+      .map((line) => line.replace(/^-\s*/, "").trim())
+      .filter(Boolean)
+    keyPoints.push(...points)
+  }
+
+  // Extract decisions
   const decisions: string[] = []
-  const todos: string[] = []
-
-  for (const text of [...userMessages, ...assistantMessages]) {
-    const decisionPatterns = [
-      /决定[：:]\s*(.+)/g,
-      /决策[：:]\s*(.+)/g,
-      /chosen?[：:]\s*(.+)/gi,
-      /decided?[：:]\s*(.+)/gi,
-      /will use\s+(.+)/gi,
-      /going with\s+(.+)/gi,
-    ]
-    for (const pattern of decisionPatterns) {
-      const matches = text.matchAll(pattern)
-      for (const match of matches) {
-        if (match[1] && match[1].length < 200) {
-          decisions.push(truncateText(match[1].trim(), 100))
-        }
-      }
-    }
-
-    const todoPatterns = [
-      /TODO[：:]\s*(.+)/gi,
-      /待办[：:]\s*(.+)/g,
-      /需要[：:]\s*(.+)/g,
-      /接下来[：:]\s*(.+)/g,
-    ]
-    for (const pattern of todoPatterns) {
-      const matches = text.matchAll(pattern)
-      for (const match of matches) {
-        if (match[1] && match[1].length < 200) {
-          todos.push(truncateText(match[1].trim(), 100))
-        }
-      }
-    }
-  }
-
-  const firstUserMessage = userMessages[0] || ""
-  const summary = firstUserMessage
-    ? `**Topic:** ${truncateText(firstUserMessage, 300)}`
-    : "No summary available"
-
-  if (userMessages.length > 0) {
-    keyPoints.push(`User asked about: ${truncateText(userMessages[0], 100)}`)
-  }
-  if (assistantMessages.length > 0) {
-    const lastResponse = assistantMessages[assistantMessages.length - 1]
-    keyPoints.push(`Final response addressed: ${truncateText(lastResponse, 100)}`)
+  const decisionsMatch = summary.match(/\*\*Decisions:\*\*\n([\s\S]*?)(?=\n\*\*|$)/)
+  if (decisionsMatch) {
+    const items = decisionsMatch[1]
+      .split("\n")
+      .filter((line) => line.trim().startsWith("-"))
+      .map((line) => line.replace(/^-\s*/, "").trim())
+      .filter(Boolean)
+    decisions.push(...items)
   }
 
   return {
     sessionID,
     timestamp: new Date().toISOString(),
     summary,
-    keyPoints: [...new Set(keyPoints)].slice(0, 5),
-    decisions: [...new Set(decisions)].slice(0, 3),
-    todos: [...new Set(todos)].slice(0, 3),
-    tags: [...new Set(tags)].slice(0, 5),
+    keyPoints: [...new Set(keyPoints)].slice(0, 10),
+    decisions: [...new Set(decisions)].slice(0, 5),
+    todos: [],
+    tags: [...new Set(tags)].slice(0, 10),
+  }
+}
+
+/** Fallback: basic extraction when LLM is unavailable */
+export function extractSessionSummaryFallback(
+  sessionID: string,
+  messages: MessageWrapper[]
+): MemoryEntry {
+  const prepared = prepareMessagesForSummary(messages)
+
+  const userMessages = prepared.filter((m) => m.role === "user").map((m) => m.text)
+  const assistantMessages = prepared
+    .filter((m) => m.role === "assistant")
+    .map((m) => m.text)
+
+  // Extract tags
+  const tags: string[] = []
+  for (const m of prepared) {
+    const tagMatches = m.text.matchAll(/#([a-zA-Z][\w-]{1,30})/g)
+    for (const match of tagMatches) {
+      const tag = match[1]?.toLowerCase()
+      if (tag) tags.push(`#${tag}`)
+    }
+  }
+
+  const firstUserMessage = userMessages[0] || ""
+  const lastAssistantMessage = assistantMessages[assistantMessages.length - 1] || ""
+
+  // Use longer truncation for fallback
+  const truncate = (text: string, max: number) =>
+    text.length <= max ? text : text.slice(0, max) + "..."
+
+  const summary = firstUserMessage
+    ? `**Topic:** ${truncate(firstUserMessage, 500)}`
+    : "No summary available"
+
+  const keyPoints: string[] = []
+  if (firstUserMessage) {
+    keyPoints.push(`User asked: ${truncate(firstUserMessage, 300)}`)
+  }
+  if (lastAssistantMessage) {
+    keyPoints.push(`Response: ${truncate(lastAssistantMessage, 300)}`)
+  }
+
+  return {
+    sessionID,
+    timestamp: new Date().toISOString(),
+    summary,
+    keyPoints,
+    decisions: [],
+    todos: [],
+    tags: [...new Set(tags)].slice(0, 10),
   }
 }
